@@ -73,6 +73,9 @@ class ScreensTest {
             GlobeSwapTheme { ConversationsScreen(conversations, photoUrl = { "" }, onOpen = {}, onDeleteAccount = {}) }
         }
         conversations.forEach { compose.onNodeWithText(it.label).assertExists() }
+        compose.onNodeWithText("New photo for you!").assertExists()
+        compose.onNodeWithText("Waiting for their photo").assertExists()
+        compose.onNodeWithText("Your turn").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/conversations.png")
     }
 

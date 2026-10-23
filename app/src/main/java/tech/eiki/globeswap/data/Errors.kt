@@ -12,6 +12,7 @@ fun Throwable.userMessage(): String = when (this) {
         "invalid_image" -> "The photo could not be processed."
         "blocked" -> "This chat is blocked."
         "not_yours" -> "You can only delete your own photos."
+        "not_your_turn" -> "Wait for the stranger's photo before you reply."
         "not_found" -> "No longer available."
         else -> "Server error ($status)."
     }

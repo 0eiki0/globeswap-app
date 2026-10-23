@@ -134,8 +134,8 @@ fun ConversationsScreen(
                         Text(
                             when {
                                 unread -> "New photo for you!"
-                                conversation.lastFromMe -> "You sent the last photo"
-                                else -> "Photo received"
+                                conversation.lastFromMe -> "Waiting for their photo"
+                                else -> "Your turn"
                             },
                             color = if (unread) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )

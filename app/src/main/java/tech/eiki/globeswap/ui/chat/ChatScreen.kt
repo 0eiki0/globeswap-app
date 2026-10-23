@@ -156,6 +156,8 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                     state == ChatViewModel.DetailState.Loading -> CircularProgressIndicator()
                     blocked -> Text("This chat is blocked.", color = MaterialTheme.colorScheme.error)
                     sending -> CircularProgressIndicator()
+                    // Immer im Wechsel: erst wieder antworten, wenn das Gegenüber ein Foto geschickt hat.
+                    conversation?.lastFromMe == true -> WaitingForReply()
                     else -> Button(onClick = { replying = true }, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(Modifier.size(8.dp))
@@ -240,6 +242,18 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
 }
 
 private data class ReportTarget(val messageId: String?)
+
+@Composable
+private fun WaitingForReply() {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text("Waiting for the stranger's photo", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "You take turns – you can reply once they've sent one.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

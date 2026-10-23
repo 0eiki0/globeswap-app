@@ -1,7 +1,4 @@
-• Fotos vor dem Senden bearbeiten: Text, Zeichnungen, Emoji-Sticker und Filter
-• Sticker mit dem Eck-Anfasser oder zwei Fingern drehen und skalieren
-• Eindeutige Kennung für jede Person, sichtbar in Chats und unter „About“
-• Links zu Datenschutz, Nutzungsbedingungen und Datenlöschung
-• Mehr Privatsphäre: Fotos lassen sich nicht speichern, Screenshots und Bildschirmaufnahmen sind gesperrt
-• Hinweis, wenn eine neue Version bei F-Droid oder GitHub erschienen ist; zu alte Versionen werden zum Update aufgefordert
 • Ganze Chats und eigene Fotos löschen – auch bei der anderen Person
+• Im Chat wird jetzt abwechselnd geantwortet
+• Hinweis, wenn eine neue Version erschienen ist
+• Mehr Privatsphäre: Fotos lassen sich nicht speichern, Screenshots und Bildschirmaufnahmen sind gesperrt
