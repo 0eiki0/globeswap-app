@@ -1,0 +1,22 @@
+# Build
+*.iml
+.gradle/
+.kotlin/
+build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+
+# Lokal / IDE
+/local.properties
+/.idea/
+.DS_Store
+
+# Signaturschlüssel – niemals ins Repository
+/signing/
+*.jks
+*.keystore
+keystore.properties

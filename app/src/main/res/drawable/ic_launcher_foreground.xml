@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Kamera mit zwei Tausch-Pfeilen -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,38 L46,32 L62,32 L68,38 L76,38 C78.2,38 80,39.8 80,42 L80,70 C80,72.2 78.2,74 76,74 L32,74 C29.8,74 28,72.2 28,70 L28,42 C28,39.8 29.8,38 32,38 Z" />
+    <path
+        android:fillColor="#1E6FD9"
+        android:pathData="M54,44 A12,12 0 1,1 53.99,44 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,54 L50,50 L50,52.5 L58,52.5 L58,55.5 L50,55.5 L50,58 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M62,60 L58,64 L58,61.5 L50,61.5 L50,58.5 L58,58.5 L58,56 Z" />
+</vector>

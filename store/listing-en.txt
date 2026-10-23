@@ -1,0 +1,54 @@
+=== App name (max. 30) ===
+GlobeSwap
+
+=== Short description (max. 80) ===
+Swap photos with strangers around the world. No sign-up, no ads.
+
+=== Full description (max. 4000) ===
+Take a photo of whatever you see right now – GlobeSwap sends it to a stranger somewhere in the world who just took a photo too, and you get theirs.
+
+📸 SNAP & SWAP
+Take a photo, tap Swap, and receive a surprise photo from someone else on the planet. A sunset in Lisbon, a busy street in Tokyo, a cat in Buenos Aires – you never know what comes next.
+
+💬 CONVERSATIONS MADE OF PICTURES
+Reply with a photo and keep the conversation going – without a single word, if you like. All your swaps are waiting for you in your chats.
+
+🎨 MAKE IT YOURS
+Add text, emoji stickers and drawings, pick a filter, and resize and rotate everything with your fingers before you send.
+
+🔒 PRIVATE BY DESIGN
+• No sign-up: no name, no email, no phone number
+• Location and other hidden photo data are removed from every photo
+• No ads, no tracking, no analytics
+• Delete all your data in the app at any time
+
+🛡️ SAFE COMMUNITY
+Clear rules, reporting and blocking built in, and active moderation. GlobeSwap is for people aged 16 and older.
+
+Start swapping and see the world through other people’s eyes!
+
+=== Kurzbeschreibung Deutsch (optional, max. 80) ===
+Tausche Fotos mit Fremden auf der ganzen Welt. Ohne Anmeldung, ohne Werbung.
+
+=== Ausführliche Beschreibung Deutsch (optional, max. 4000) ===
+Mach ein Foto von dem, was du gerade siehst – GlobeSwap schickt es an eine fremde Person irgendwo auf der Welt, die auch gerade ein Foto gemacht hat, und du bekommst ihres.
+
+📸 FOTOGRAFIEREN & TAUSCHEN
+Foto machen, auf Swap tippen und ein Überraschungsfoto von irgendwo auf der Welt bekommen. Ein Sonnenuntergang in Lissabon, eine Straße in Tokio, eine Katze in Buenos Aires – du weißt nie, was als Nächstes kommt.
+
+💬 UNTERHALTUNGEN AUS BILDERN
+Antworte mit einem Foto und halte die Unterhaltung am Laufen – ganz ohne Worte, wenn du magst. Alle Tausche findest du in deinen Chats.
+
+🎨 MACH ES PERSÖNLICH
+Füge Text, Emoji-Sticker und Zeichnungen hinzu, wähle einen Filter und ändere Größe und Drehung mit den Fingern, bevor du sendest.
+
+🔒 DATENSPARSAM
+• Keine Anmeldung: kein Name, keine E-Mail, keine Telefonnummer
+• Standort und andere versteckte Fotodaten werden aus jedem Foto entfernt
+• Keine Werbung, kein Tracking, keine Analysedienste
+• Lösche alle deine Daten jederzeit in der App
+
+🛡️ SICHERE COMMUNITY
+Klare Regeln, Melden und Blockieren direkt in der App und aktive Moderation. GlobeSwap ist ab 16 Jahren.
+
+Fang an zu tauschen und sieh die Welt mit den Augen anderer!
