@@ -4,7 +4,7 @@ Alles, was du zum Hochladen brauchst, liegt in diesem Ordner:
 
 | Datei | Wofür |
 |---|---|
-| `GlobeSwap-1.3.aab` | App-Bundle zum Hochladen (signiert mit deinem Upload-Schlüssel) |
+| App-Bundle (`.aab`) | baut GitHub bei jedem Push: **Actions** → oberster Lauf → **Artifacts** → `globeswap-release-…` |
 | `icon-512.png` | App-Symbol (512 × 512) |
 | `feature-graphic.png` | Feature-Grafik (1024 × 500) |
 | `screenshots/*.png` | 4 Smartphone-Screenshots (1080 × 1920) |
@@ -19,7 +19,7 @@ Alles, was du zum Hochladen brauchst, liegt in diesem Ordner:
    - https://swap.eiki.tech/terms
    - https://swap.eiki.tech/imprint
    - https://swap.eiki.tech/delete-account
-3. Prüfen, ob der Name **GlobeSwap** im Play Store schon vergeben ist.
+3. Paketname in der Play Console: `tech.eiki.globeswap`.
 
 ## 1. Entwicklerkonto
 
@@ -86,7 +86,8 @@ Behörden-App **Nein**.
 ## 5. Geschlossener Test (Pflicht bei neuem privatem Konto)
 
 1. „Testen“ → **Geschlossener Test** → Track erstellen → Tester per E-Mail-Liste oder Google-Gruppe hinzufügen.
-2. **Neuen Release erstellen** → `GlobeSwap-1.3.aab` hochladen.
+2. **Neuen Release erstellen** → das `.aab` aus dem neuesten GitHub-Build (`globeswap-release-…`) hochladen.
+   Vorher prüfen: Im Build-Ergebnis steht „Signatur-Zertifikat (SHA-256)“ – das muss dein eigener Schlüssel sein.
    Beim ersten Upload fragt Google nach **Play App Signing** → akzeptieren. Dein Schlüssel
    (`photoswap-release.jks`) wird damit zum *Upload-Schlüssel* – weiterhin sicher aufbewahren,
    jedes Update muss damit signiert sein.
