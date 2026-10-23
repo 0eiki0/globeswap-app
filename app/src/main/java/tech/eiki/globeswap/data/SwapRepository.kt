@@ -106,6 +106,18 @@ class SwapRepository(private val api: ApiClient) {
         localChanges.tryEmit(Unit)
     }
 
+    /** Löscht die ganze Unterhaltung samt Fotos – auch bei der anderen Person. */
+    suspend fun deleteConversation(conversationId: String) {
+        api.callRaw("DELETE", "/api/conversations/$conversationId")
+        localChanges.tryEmit(Unit)
+    }
+
+    /** Löscht ein eigenes Foto – auch bei der anderen Person. War es das letzte, verschwindet die Unterhaltung. */
+    suspend fun deleteMessage(conversationId: String, messageId: String) {
+        api.callRaw("DELETE", "/api/conversations/$conversationId/messages/$messageId")
+        localChanges.tryEmit(Unit)
+    }
+
     // ------------------------------------------------------- Moderation & Konto
 
     suspend fun report(conversationId: String, messageId: String?, reason: ReportReason) {

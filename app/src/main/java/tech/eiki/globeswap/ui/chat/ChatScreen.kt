@@ -3,7 +3,9 @@ package tech.eiki.globeswap.ui.chat
 import android.text.format.DateUtils
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -83,6 +86,8 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     var reportTarget by remember { mutableStateOf<ReportTarget?>(null) }
     var confirmBlock by remember { mutableStateOf(false) }
     var viewing by remember { mutableStateOf<Message?>(null) }
+    var confirmDeleteChat by remember { mutableStateOf(false) }
+    var deleteTarget by remember { mutableStateOf<Message?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) { vm.toasts.collect { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() } }
@@ -133,6 +138,12 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                             leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
                             onClick = { menuOpen = false; confirmBlock = true },
                         )
+                        DropdownMenuItem(
+                            text = { Text("Delete chat") },
+                            leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
+                            enabled = loaded != null,
+                            onClick = { menuOpen = false; confirmDeleteChat = true },
+                        )
                     }
                 },
             )
@@ -165,6 +176,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                     message = message,
                     url = vm.photoUrl(message.photoId),
                     onClick = { viewing = message },
+                    onLongClick = { if (message.mine) deleteTarget = message },
                 )
             }
         }
@@ -173,9 +185,34 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     viewing?.let { message ->
         PhotoViewer(
             url = vm.photoUrl(message.photoId),
-            canReport = !message.mine,
+            mine = message.mine,
             onDismiss = { viewing = null },
             onReport = { viewing = null; reportTarget = ReportTarget(message.id) },
+            onDelete = { viewing = null; deleteTarget = message },
+        )
+    }
+
+    deleteTarget?.let { message ->
+        AlertDialog(
+            onDismissRequest = { deleteTarget = null },
+            title = { Text("Delete this photo?") },
+            text = { Text("It will be removed for both of you.") },
+            confirmButton = {
+                TextButton(onClick = { deleteTarget = null; vm.deletePhoto(message.id) }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel") } },
+        )
+    }
+
+    if (confirmDeleteChat) {
+        AlertDialog(
+            onDismissRequest = { confirmDeleteChat = false },
+            title = { Text("Delete this chat?") },
+            text = { Text("The chat and all its photos will be deleted for both of you. This can't be undone.") },
+            confirmButton = {
+                TextButton(onClick = { confirmDeleteChat = false; vm.deleteChat(onDeleted = onBack) }) { Text("Delete") }
+            },
+            dismissButton = { TextButton(onClick = { confirmDeleteChat = false }) { Text("Cancel") } },
         )
     }
 
@@ -204,8 +241,9 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
 
 private data class ReportTarget(val messageId: String?)
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit) {
+private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit, onLongClick: () -> Unit) {
     val mine = message.mine
     Column(
         Modifier.fillMaxWidth(),
@@ -220,7 +258,7 @@ private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit) {
                 .aspectRatio(3f / 4f)
                 .clip(RoundedCornerShape(16.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable(onClick = onClick),
+                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
         )
         Text(
             buildString {
@@ -234,7 +272,7 @@ private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PhotoViewer(url: String, canReport: Boolean, onDismiss: () -> Unit, onReport: () -> Unit) {
+private fun PhotoViewer(url: String, mine: Boolean, onDismiss: () -> Unit, onReport: () -> Unit, onDelete: () -> Unit) {
     // Kein Speichern; Screenshots sind auch im Vollbild gesperrt (eigenes Fenster, daher ausdrücklich SecureOn).
     Dialog(
         onDismissRequest = onDismiss,
@@ -254,7 +292,11 @@ private fun PhotoViewer(url: String, canReport: Boolean, onDismiss: () -> Unit, 
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
                 }
-                if (canReport) {
+                if (mine) {
+                    IconButton(onClick = onDelete) {
+                        Icon(Icons.Default.Delete, contentDescription = "Delete photo", tint = Color.White)
+                    }
+                } else {
                     IconButton(onClick = onReport) {
                         Icon(Icons.Default.Flag, contentDescription = "Report photo", tint = Color.White)
                     }

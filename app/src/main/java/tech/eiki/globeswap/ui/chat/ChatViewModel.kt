@@ -72,6 +72,17 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         onBlocked()
     }
 
+    fun deleteChat(onDeleted: () -> Unit) = launchSafely("Could not delete chat") {
+        repo.deleteConversation(conversationId)
+        _toasts.emit("Chat deleted.")
+        onDeleted()
+    }
+
+    fun deletePhoto(messageId: String) = launchSafely("Could not delete photo") {
+        repo.deleteMessage(conversationId, messageId)
+        _toasts.emit("Photo deleted.")
+    }
+
     private fun launchSafely(errorMessage: String?, block: suspend () -> Unit) {
         viewModelScope.launch {
             try {

@@ -18,6 +18,7 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
 * Vor dem Senden bearbeiten wie bei Snapchat: Text, Zeichnen, Emoji-Sticker, Filter;
   Sticker per Anfasser oder mit zwei Fingern drehen und skalieren
 * Unterhaltungen nur aus Fotos, live per WebSocket, Liste mit Badge für neue Fotos
+* Ganze Chats (Chat → ⋮ → Delete chat) und eigene Fotos (lange drücken oder im Vollbild 🗑) löschen – auch bei der anderen Person
 * Melden, Blockieren, alle eigenen Daten löschen
 * Fotos lassen sich nicht speichern; Screenshots und Bildschirmaufnahmen sind in der ganzen App gesperrt (`FLAG_SECURE`)
 * Updates: Der Server kann im Admin-Bereich eine Mindestversion festlegen – ältere Versionen zeigen dann
