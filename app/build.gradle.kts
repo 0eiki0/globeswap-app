@@ -15,7 +15,10 @@ android {
         applicationId = "tech.eiki.globeswap"
         minSdk = 29
         targetSdk = 36
-        versionCode = 4
+        // versionCode zählt GitHub Actions automatisch hoch (GLOBESWAP_VERSION_CODE = 100 + Build-Nummer,
+        // siehe .github/workflows/build.yml). Lokale Builds bekommen 4.
+        versionCode = providers.environmentVariable("GLOBESWAP_VERSION_CODE").orNull?.toIntOrNull() ?: 4
+        // Sichtbare Version für Nutzer – bei Bedarf von Hand ändern.
         versionName = "1.3"
 
         val serverUrl = providers.gradleProperty("globeswap.serverUrl").get().trimEnd('/')

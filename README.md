@@ -41,6 +41,13 @@ globeswap.serverUrl=https://swap.eiki.tech
 Lokal mit eigenem Testserver (`go run .` im Server-Repository) im Emulator:
 `globeswap.serverUrl=http://10.0.2.2:8080`. `http://` ist nur im Debug-Build erlaubt.
 
+## Versionsnummer
+
+`versionCode` zählt GitHub Actions automatisch hoch (100 + Nummer des Builds), damit jedes App-Bundle bei
+Google hochgeladen werden kann. Die für Nutzer sichtbare Version (`versionName` in `app/build.gradle.kts`)
+änderst du bei Bedarf von Hand. In der App steht beides unter **About** („Version 1.3 (build 107)“).
+Lokale Builds haben `versionCode` 4.
+
 ## Signieren
 
 Release-Builds werden signiert, wenn `signing/keystore.properties` und `signing/photoswap-release.jks`
@@ -59,7 +66,7 @@ keyPassword=…
 ## Play Store
 
 Paketname: `tech.eiki.globeswap` (`applicationId` in `app/build.gradle.kts`).
-Bei jedem Update `versionCode` erhöhen (zurzeit 4, Version 1.3).
+`versionCode` wird beim Build auf GitHub automatisch erhöht (siehe „Versionsnummer“).
 Schritt-für-Schritt-Anleitung: [`store/PLAY-STORE-ANLEITUNG.md`](store/PLAY-STORE-ANLEITUNG.md).
 
 ## Automatische Builds (GitHub Actions)

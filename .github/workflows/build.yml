@@ -29,6 +29,18 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # versionCode = 100 + Build-Nummer: steigt mit jedem Build, damit jedes App-Bundle bei Google
+      # hochgeladen werden kann. Gradle liest ihn aus GLOBESWAP_VERSION_CODE.
+      - name: Versionsnummer
+        id: version
+        run: |
+          code=$((100 + GITHUB_RUN_NUMBER))
+          name=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          echo "GLOBESWAP_VERSION_CODE=$code" >> "$GITHUB_ENV"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "### GlobeSwap $name (versionCode $code)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Version $name, versionCode $code"
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -82,11 +94,21 @@ jobs:
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
         run: ./gradlew assembleRelease bundleRelease
 
+      # Öffentlicher Fingerabdruck des Zertifikats: zeigt, mit welchem Schlüssel signiert wurde
+      # (muss zum Upload-Schlüssel in der Play Console passen). Enthält nichts Geheimes.
+      - name: Signatur prüfen
+        if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
+        run: |
+          apksigner="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+          fp=$("$apksigner" verify --print-certs app/build/outputs/apk/release/*.apk | sed -n 's/.*SHA-256 digest: //p' | head -1)
+          echo "::notice title=Signatur-Zertifikat (SHA-256)::$fp"
+          echo "Zertifikat SHA-256: \`$fp\`" >> "$GITHUB_STEP_SUMMARY"
+
       - name: Release hochladen
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
         uses: actions/upload-artifact@v4
         with:
-          name: globeswap-release
+          name: globeswap-release-${{ steps.version.outputs.name }}-${{ env.GLOBESWAP_VERSION_CODE }}
           path: |
             app/build/outputs/apk/release/*.apk
             app/build/outputs/bundle/release/*.aab

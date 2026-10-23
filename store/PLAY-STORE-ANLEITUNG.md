@@ -105,8 +105,10 @@ Server neu starten – dann erscheint auf https://swap.eiki.tech ein „Get it o
 
 ## Updates später
 
-Für jedes Update muss `versionCode` in `app/build.gradle.kts` steigen (zurzeit 4), dann
-`./gradlew bundleRelease` und die neue `.aab` hochladen. Neue Apps und Updates müssen außerdem die
+Code ändern und auf `main` pushen – GitHub baut automatisch und zählt `versionCode` selbst hoch.
+Unter **Actions** → oberster Lauf → **Artifacts** → `globeswap-release-…` das `.aab` herunterladen und in der
+Play Console hochladen. Die sichtbare Version (`versionName`) bei Bedarf in `app/build.gradle.kts` ändern.
+Neue Apps und Updates müssen außerdem die
 jeweils aktuelle Android-Version ansprechen (Stand 2026: Android 16 / API 36; Google hebt das jährlich an).
 
 ## Wenn Google nachfragt
