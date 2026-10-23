@@ -61,3 +61,16 @@ keyPassword=…
 Paketname: `tech.eiki.globeswap` (`applicationId` in `app/build.gradle.kts`).
 Bei jedem Update `versionCode` erhöhen (zurzeit 4, Version 1.3).
 Schritt-für-Schritt-Anleitung: [`store/PLAY-STORE-ANLEITUNG.md`](store/PLAY-STORE-ANLEITUNG.md).
+
+## Automatische Builds (GitHub Actions)
+
+Bei jedem Push auf `main` und bei Pull Requests laufen Tests und Lint, und eine Debug-APK wird gebaut.
+Ergebnisse: Reiter **Actions** → Lauf auswählen → **Artifacts** (`globeswap-debug-apk`, `test-reports`).
+
+Signierte Release-APK und App-Bundle (`globeswap-release`) entstehen zusätzlich, wenn im Repository unter
+**Settings → Secrets and variables → Actions** zwei Secrets hinterlegt sind:
+
+| Secret | Inhalt |
+|---|---|
+| `SIGNING_KEYSTORE_BASE64` | der Signaturschlüssel als Base64: `base64 -w0 photoswap-release.jks` |
+| `SIGNING_PASSWORD` | das Passwort aus `keystore.properties` (Store- und Key-Passwort sind gleich) |
