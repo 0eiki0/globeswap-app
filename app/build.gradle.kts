@@ -18,8 +18,9 @@ android {
         // versionCode zählt GitHub Actions automatisch hoch (GLOBESWAP_VERSION_CODE = 100 + Build-Nummer,
         // siehe .github/workflows/build.yml). Lokale Builds bekommen 4.
         versionCode = providers.environmentVariable("GLOBESWAP_VERSION_CODE").orNull?.toIntOrNull() ?: 4
-        // Sichtbare Version für Nutzer – bei Bedarf von Hand ändern.
-        versionName = "1.3"
+        // Sichtbare Version für Nutzer. Bei einem Release-Tag (v1.4) setzt GitHub Actions sie aus dem Tag
+        // (GLOBESWAP_VERSION_NAME), sonst gilt der Wert hier.
+        versionName = providers.environmentVariable("GLOBESWAP_VERSION_NAME").orNull?.takeIf { it.isNotBlank() } ?: "1.3"
 
         val serverUrl = providers.gradleProperty("globeswap.serverUrl").get().trimEnd('/')
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")

@@ -1,8 +1,10 @@
 # Baut die App bei jedem Push und Pull Request:
 #  - Tests (Robolectric) und Lint
 #  - Debug-APK zum Herunterladen (Artefakt "globeswap-debug-apk")
-#  - Signierte Release-APK und App-Bundle (Artefakt "globeswap-release"), sobald die
+#  - Signierte Release-APK und App-Bundle (Artefakt "globeswap-release-…"), sobald die
 #    Secrets SIGNING_KEYSTORE_BASE64 und SIGNING_PASSWORD im Repository hinterlegt sind.
+#  - Bei einem Tag wie v1.4: GitHub-Release mit der signierten APK zum Herunterladen
+#    (Version "1.4" kommt aus dem Tag).
 name: Build
 
 on:
@@ -23,6 +25,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    outputs:
+      version: ${{ steps.version.outputs.name }}
+      code: ${{ steps.version.outputs.code }}
+      signed: ${{ steps.signed.outputs.signed }}
+      artifact: globeswap-release-${{ steps.version.outputs.name }}-${{ steps.version.outputs.code }}
     env:
       SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
       SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
@@ -35,9 +42,15 @@ jobs:
         id: version
         run: |
           code=$((100 + GITHUB_RUN_NUMBER))
-          name=$(sed -n 's/.*versionName = "\(.*\)".*/\1/p' app/build.gradle.kts)
+          if [[ "$GITHUB_REF_TYPE" == "tag" && "$GITHUB_REF_NAME" =~ ^v[0-9] ]]; then
+            name="${GITHUB_REF_NAME#v}"
+            echo "GLOBESWAP_VERSION_NAME=$name" >> "$GITHUB_ENV"
+          else
+            name=$(sed -n 's/.*?: "\(.*\)".*/\1/p' app/build.gradle.kts | head -1)
+          fi
           echo "GLOBESWAP_VERSION_CODE=$code" >> "$GITHUB_ENV"
           echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "code=$code" >> "$GITHUB_OUTPUT"
           echo "### GlobeSwap $name (versionCode $code)" >> "$GITHUB_STEP_SUMMARY"
           echo "Version $name, versionCode $code"
 
@@ -103,6 +116,16 @@ jobs:
           fp=$("$apksigner" verify --print-certs app/build/outputs/apk/release/*.apk | sed -n 's/.*SHA-256 digest: //p' | head -1)
           echo "::notice title=Signatur-Zertifikat (SHA-256)::$fp"
           echo "Zertifikat SHA-256: \`$fp\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "$fp" > app/build/outputs/apk/release/certificate-sha256.txt
+
+      - name: APK für Downloads benennen
+        id: signed
+        if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
+        run: |
+          cd app/build/outputs/apk/release
+          cp app-release.apk "GlobeSwap-${{ steps.version.outputs.name }}.apk"
+          sha256sum "GlobeSwap-${{ steps.version.outputs.name }}.apk" > SHA256SUMS.txt
+          echo "signed=true" >> "$GITHUB_OUTPUT"
 
       - name: Release hochladen
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
@@ -111,6 +134,7 @@ jobs:
           name: globeswap-release-${{ steps.version.outputs.name }}-${{ env.GLOBESWAP_VERSION_CODE }}
           path: |
             app/build/outputs/apk/release/*.apk
+            app/build/outputs/apk/release/*.txt
             app/build/outputs/bundle/release/*.aab
           retention-days: 30
 
@@ -121,3 +145,46 @@ jobs:
       - name: Hinweis ohne Signaturschlüssel
         if: env.SIGNING_KEYSTORE_BASE64 == '' || env.SIGNING_PASSWORD == ''
         run: echo "::notice::Kein Signaturschlüssel hinterlegt – Release-Build übersprungen (siehe README, Abschnitt 'Automatische Builds')."
+
+  # Bei einem Tag wie v1.4: GitHub-Release mit der signierten APK (nur wenn signiert gebaut wurde).
+  release:
+    if: startsWith(github.ref, 'refs/tags/v') && needs.build.outputs.signed == 'true'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: ${{ needs.build.outputs.artifact }}
+          path: dist
+
+      - name: Release-Text
+        run: |
+          cert=$(cat dist/apk/release/certificate-sha256.txt)
+          sum=$(cut -d' ' -f1 dist/apk/release/SHA256SUMS.txt)
+          cat > notes.md <<NOTES
+          ## GlobeSwap ${{ needs.build.outputs.version }}
+
+          Swap photos with strangers around the world.
+
+          ### Install
+          1. Download **GlobeSwap-${{ needs.build.outputs.version }}.apk** below on your Android phone (Android 10 or newer).
+          2. Open it and allow installing apps from this source when Android asks.
+
+          Installed from Google Play already? Keep using that version – updates from GitHub and Google Play can't be mixed.
+
+          ### Verify
+          - APK SHA-256: \`$sum\`
+          - Signing certificate SHA-256: \`$cert\`
+          - versionCode ${{ needs.build.outputs.code }}
+          NOTES
+          sed -i 's/^          //' notes.md
+
+      - uses: softprops/action-gh-release@v3
+        with:
+          name: GlobeSwap ${{ needs.build.outputs.version }}
+          body_path: notes.md
+          files: |
+            dist/apk/release/GlobeSwap-*.apk
+            dist/apk/release/SHA256SUMS.txt

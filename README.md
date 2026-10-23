@@ -41,11 +41,24 @@ globeswap.serverUrl=https://swap.eiki.tech
 Lokal mit eigenem Testserver (`go run .` im Server-Repository) im Emulator:
 `globeswap.serverUrl=http://10.0.2.2:8080`. `http://` ist nur im Debug-Build erlaubt.
 
+## Release auf GitHub (Download ohne Play Store)
+
+Ein Versions-Tag erstellt automatisch ein GitHub-Release mit der signierten APK (`GlobeSwap-1.4.apk`),
+Prüfsumme und Installationsanleitung. Die sichtbare Version kommt dabei aus dem Tag:
+
+```bash
+git tag v1.4 && git push origin v1.4
+```
+
+Oder im Browser: **Releases → Draft a new release → Choose a tag → `v1.4` eingeben → Create new tag**
+– dann nur **Save draft** wählen bzw. den Entwurf wieder löschen; das eigentliche Release legt der Build an.
+Damit andere die APK herunterladen können, muss das Repository öffentlich sein.
+
 ## Versionsnummer
 
 `versionCode` zählt GitHub Actions automatisch hoch (100 + Nummer des Builds), damit jedes App-Bundle bei
 Google hochgeladen werden kann. Die für Nutzer sichtbare Version (`versionName` in `app/build.gradle.kts`)
-änderst du bei Bedarf von Hand. In der App steht beides unter **About** („Version 1.3 (build 107)“).
+änderst du bei Bedarf von Hand; bei einem Release-Tag (`v1.4`) kommt sie automatisch aus dem Tag. In der App steht beides unter **About** („Version 1.3 (build 107)“).
 Lokale Builds haben `versionCode` 4.
 
 ## Signieren
