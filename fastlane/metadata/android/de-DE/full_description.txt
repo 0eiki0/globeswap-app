@@ -12,6 +12,7 @@ Füge Text, Emoji-Sticker und Zeichnungen hinzu, wähle einen Filter und ändere
 🔒 DATENSPARSAM
 • Keine Anmeldung: kein Name, keine E-Mail, keine Telefonnummer
 • Standort und andere versteckte Fotodaten werden aus jedem Foto entfernt
+• Fotos lassen sich nicht speichern, Screenshots sind gesperrt
 • Keine Werbung, kein Tracking, keine Analysedienste
 • Lösche alle deine Daten jederzeit in der App
 

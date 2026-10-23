@@ -2,3 +2,4 @@
 • Resize and rotate stickers with the corner handle or two fingers
 • Unique ID for every person, shown in chats and under About
 • Links to privacy policy, terms and data deletion
+• More privacy: photos can't be saved, screenshots and screen recordings are blocked

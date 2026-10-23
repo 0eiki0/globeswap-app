@@ -2,3 +2,4 @@
 • Sticker mit dem Eck-Anfasser oder zwei Fingern drehen und skalieren
 • Eindeutige Kennung für jede Person, sichtbar in Chats und unter „About“
 • Links zu Datenschutz, Nutzungsbedingungen und Datenlöschung
+• Mehr Privatsphäre: Fotos lassen sich nicht speichern, Screenshots und Bildschirmaufnahmen sind gesperrt

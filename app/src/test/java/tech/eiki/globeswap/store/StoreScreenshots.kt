@@ -22,6 +22,7 @@ import androidx.compose.ui.test.click
 import androidx.compose.ui.test.swipe
 import androidx.test.core.app.ApplicationProvider
 import coil.Coil
+import coil.annotation.ExperimentalCoilApi
 import coil.ImageLoader
 import coil.test.FakeImageLoaderEngine
 import com.github.takahirom.roborazzi.captureRoboImage
@@ -90,6 +91,7 @@ class StoreScreenshots {
         compose.onRoot().captureRoboImage("$OUT/3-sticker.png")
     }
 
+    @OptIn(ExperimentalCoilApi::class)
     @Test
     fun chatList() {
         val context = ApplicationProvider.getApplicationContext<Application>()

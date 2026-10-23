@@ -27,7 +27,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -50,7 +49,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -61,6 +59,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -68,8 +67,6 @@ import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.ReportReason
 import tech.eiki.globeswap.ui.StrangerId
 import tech.eiki.globeswap.ui.camera.PhotoCapture
-import tech.eiki.globeswap.util.ImageUtils
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -238,9 +235,11 @@ private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit) {
 
 @Composable
 private fun PhotoViewer(url: String, canReport: Boolean, onDismiss: () -> Unit, onReport: () -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+    // Kein Speichern; Screenshots sind auch im Vollbild gesperrt (eigenes Fenster, daher ausdrücklich SecureOn).
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false, securePolicy = SecureFlagPolicy.SecureOn),
+    ) {
         Box(Modifier.fillMaxSize().background(Color.Black)) {
             AsyncImage(
                 model = url,
@@ -255,23 +254,9 @@ private fun PhotoViewer(url: String, canReport: Boolean, onDismiss: () -> Unit, 
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
                 }
-                Row {
-                    IconButton(onClick = {
-                        scope.launch {
-                            val ok = runCatching { ImageUtils.saveToGallery(context, url) }.getOrDefault(false)
-                            Toast.makeText(
-                                context,
-                                if (ok) "Saved to gallery" else "Could not save photo",
-                                Toast.LENGTH_SHORT,
-                            ).show()
-                        }
-                    }) {
-                        Icon(Icons.Default.Download, contentDescription = "Save", tint = Color.White)
-                    }
-                    if (canReport) {
-                        IconButton(onClick = onReport) {
-                            Icon(Icons.Default.Flag, contentDescription = "Report photo", tint = Color.White)
-                        }
+                if (canReport) {
+                    IconButton(onClick = onReport) {
+                        Icon(Icons.Default.Flag, contentDescription = "Report photo", tint = Color.White)
                     }
                 }
             }

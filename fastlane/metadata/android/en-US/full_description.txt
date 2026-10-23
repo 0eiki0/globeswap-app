@@ -12,6 +12,7 @@ Add text, emoji stickers and drawings, pick a filter, and resize and rotate ever
 🔒 PRIVATE BY DESIGN
 • No sign-up: no name, no email, no phone number
 • Location and other hidden photo data are removed from every photo
+• Photos can’t be saved, and screenshots are blocked
 • No ads, no tracking, no analytics
 • Delete all your data in the app at any time
 
