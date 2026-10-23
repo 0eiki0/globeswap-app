@@ -43,15 +43,13 @@ Lokal mit eigenem Testserver (`go run .` im Server-Repository) im Emulator:
 
 ## Release auf GitHub (Download ohne Play Store)
 
-Ein Versions-Tag erstellt automatisch ein GitHub-Release mit der signierten APK (`GlobeSwap-1.4.apk`),
-Prüfsumme und Installationsanleitung. Die sichtbare Version kommt dabei aus dem Tag:
+Ein Release enthält die signierte APK (`GlobeSwap-1.4.apk`), Prüfsumme und eine Installationsanleitung.
+Die sichtbare Version kommt dabei aus der Eingabe bzw. dem Tag. Zwei Wege:
 
-```bash
-git tag v1.4 && git push origin v1.4
-```
+* **Im Browser:** **Actions → Build → Run workflow** → bei „Version für ein GitHub-Release“ z. B. `1.4`
+  eintragen → **Run workflow**. Der Build legt Tag `v1.4` und das Release selbst an.
+* **Per git:** `git tag v1.4 && git push origin v1.4`
 
-Oder im Browser: **Releases → Draft a new release → Choose a tag → `v1.4` eingeben → Create new tag**
-– dann nur **Save draft** wählen bzw. den Entwurf wieder löschen; das eigentliche Release legt der Build an.
 Damit andere die APK herunterladen können, muss das Repository öffentlich sein.
 
 ## Versionsnummer
