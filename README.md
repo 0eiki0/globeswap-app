@@ -7,8 +7,9 @@ mit einem Foto antworten. Keine Registrierung, keine Werbung, kein Google/Fireba
 Das Backend liegt in einem eigenen Repository: **globeswap-server**.
 
 ```
-app/      Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager)
-store/    Play-Store-Material: Icon, Feature-Grafik, Screenshots, Texte, PLAY-STORE-ANLEITUNG.md
+app/       Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager)
+store/     Play-Store-Material: Icon, Feature-Grafik, Screenshots, Texte, Anleitungen
+fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Screenshots, Änderungen)
 ```
 
 ## Funktionen
@@ -92,3 +93,25 @@ Signierte Release-APK und App-Bundle (`globeswap-release`) entstehen zusätzlich
 |---|---|
 | `SIGNING_KEYSTORE_BASE64` | der Signaturschlüssel als Base64: `base64 -w0 photoswap-release.jks` |
 | `SIGNING_PASSWORD` | das Passwort aus `keystore.properties` (Store- und Key-Passwort sind gleich) |
+
+## F-Droid / IzzyOnDroid
+
+Die App wird über [IzzyOnDroid](https://izzyondroid.org) verteilt: Das F-Droid-kompatible Repository übernimmt die
+signierte APK aus den GitHub-Releases. Titel, Beschreibungen und Bilder kommen aus `fastlane/metadata/android/`
+(Englisch und Deutsch), die Änderungshinweise aus `fastlane/metadata/android/*/changelogs/default.txt` –
+vor einem neuen Release dort kurz eintragen, was neu ist. Antrag: [`store/IZZYONDROID-ANTRAG.md`](store/IZZYONDROID-ANTRAG.md).
+
+Für F-Droid/IzzyOnDroid relevant:
+* keine proprietären Bibliotheken, keine Google-Dienste, keine Tracker oder Werbung
+* Release-Builds mit R8 verkleinert (ca. 4 MB statt 45 MB); kein verschlüsselter Abhängigkeits-Block in der APK
+* Anti-Feature **NonFreeNet**: Die App nutzt den GlobeSwap-Server, dessen Code nicht öffentlich ist.
+
+## Lizenz
+
+Copyright (C) 2026 GlobeSwap
+
+Dieses Programm ist freie Software: Du kannst es unter den Bedingungen der **GNU General Public License,
+Version 3** weitergeben und/oder verändern, wie von der Free Software Foundation veröffentlicht.
+Es wird OHNE JEDE GEWÄHRLEISTUNG bereitgestellt. Den vollständigen Text findest du in [`LICENSE`](LICENSE).
+
+SPDX-License-Identifier: GPL-3.0-only

@@ -42,7 +42,9 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // R8 entfernt ungenutzten Code und Ressourcen (v. a. ungenutzte Icons) – die APK wird deutlich kleiner.
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.findByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -61,6 +63,13 @@ android {
             all { it.systemProperty("roborazzi.test.record", "true") }
         }
     }
+    // Kein verschlüsselter Abhängigkeits-Block in der APK: F-Droid und IzzyOnDroid lehnen ihn ab.
+    // Im App-Bundle für Google Play bleibt er (Google nutzt ihn für Hinweise zu Bibliotheken).
+    dependenciesInfo {
+        includeInApk = false
+        includeInBundle = true
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
