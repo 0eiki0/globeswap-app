@@ -19,6 +19,8 @@ import org.robolectric.annotation.GraphicsMode
 import androidx.compose.ui.test.onNodeWithText
 import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Conversation
+import tech.eiki.globeswap.data.InstallChannel
+import tech.eiki.globeswap.data.LatestRelease
 import tech.eiki.globeswap.ui.conversations.AboutDialog
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
@@ -31,6 +33,27 @@ import java.io.File
 @Config(application = Application::class, sdk = [34], qualifiers = "w411dp-h891dp-xxhdpi")
 class ScreensTest {
     @get:Rule val compose = createComposeRule()
+
+    @Test
+    fun forcedUpdate() {
+        compose.setContent {
+            GlobeSwapTheme {
+                ForcedUpdateScreen("Please update GlobeSwap to keep swapping.", "1.3 (108)", onUpdate = {}, onCheckAgain = {})
+            }
+        }
+        compose.onNodeWithText("Update required").assertExists()
+        compose.onNodeWithText("Please update GlobeSwap to keep swapping.").assertExists()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/update-required.png")
+    }
+
+    @Test
+    fun updateBanner() {
+        compose.setContent {
+            GlobeSwapTheme { UpdateBanner(LatestRelease(112, "1.5"), InstallChannel.FDROID, onUpdate = {}, onLater = {}) }
+        }
+        compose.onNodeWithText("GlobeSwap 1.5 is available").assertExists()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/update-banner.png")
+    }
 
     @Test
     fun onboarding() {

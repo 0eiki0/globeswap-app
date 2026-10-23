@@ -3,3 +3,4 @@
 • Unique ID for every person, shown in chats and under About
 • Links to privacy policy, terms and data deletion
 • More privacy: photos can't be saved, screenshots and screen recordings are blocked
+• Notice when a new version is out on F-Droid or GitHub; outdated versions are asked to update

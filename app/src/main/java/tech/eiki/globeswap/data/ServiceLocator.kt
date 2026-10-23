@@ -8,10 +8,16 @@ object ServiceLocator {
         private set
     lateinit var repository: SwapRepository
         private set
+    lateinit var updates: AppUpdates
+        private set
 
     fun init(context: Context) {
         if (::api.isInitialized) return
-        api = ApiClient(context.applicationContext, BuildConfig.SERVER_URL)
+        val app = context.applicationContext
+        val channel = InstallChannel.detect(app)
+        api = ApiClient(app, BuildConfig.SERVER_URL, BuildConfig.VERSION_CODE, BuildConfig.VERSION_NAME, channel.header)
         repository = SwapRepository(api)
+        updates = AppUpdates(app, api, BuildConfig.VERSION_CODE, channel)
+        api.onUpdateRequired = updates::onUpdateRequired
     }
 }

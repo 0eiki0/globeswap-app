@@ -33,12 +33,31 @@ class ApiException(val status: Int, val code: String) : IOException("HTTP $statu
  * HTTP-Zugang zum PhotoSwap-Server. Beim ersten Aufruf registriert sich die App anonym
  * und speichert das Token; eine Anmeldung durch den Nutzer gibt es nicht.
  */
-class ApiClient(context: Context, private val baseUrl: String) {
+class ApiClient(
+    context: Context,
+    private val baseUrl: String,
+    versionCode: Int = 0,
+    versionName: String = "",
+    channel: String = "",
+) {
+    /** Wird aufgerufen, wenn der Server die App-Version ablehnt (HTTP 426, Mindestversion im Admin-Bereich). */
+    var onUpdateRequired: ((message: String) -> Unit)? = null
+
     private val prefs = context.getSharedPreferences("globeswap_api", Context.MODE_PRIVATE)
     private val tokenLock = Mutex()
     internal val json = Json { ignoreUnknownKeys = true }
 
     private val http = OkHttpClient.Builder()
+        // Version und Installationsquelle bei jeder Anfrage (auch Bilder und WebSocket) mitschicken.
+        .addInterceptor { chain ->
+            chain.proceed(
+                chain.request().newBuilder()
+                    .header("X-App-Version-Code", versionCode.toString())
+                    .header("X-App-Version-Name", versionName)
+                    .header("X-App-Channel", channel)
+                    .build()
+            )
+        }
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(60, TimeUnit.SECONDS)
@@ -77,6 +96,11 @@ class ApiClient(context: Context, private val baseUrl: String) {
         prefs.getString(KEY_TOKEN, null) ?: withContext(Dispatchers.IO) {
             val request = Request.Builder().url("$baseUrl/api/register").post(EMPTY_BODY).build()
             val registered = http.newCall(request).execute().use { response ->
+                if (response.code == HTTP_UPGRADE_REQUIRED) {
+                    val text = response.body?.string().orEmpty()
+                    onUpdateRequired?.invoke(errorField(text, "message").orEmpty())
+                    throw ApiException(response.code, errorCode(text))
+                }
                 json.decodeFromString(RegisterResponse.serializer(), response.bodyOrThrow())
             }
             prefs.edit().putString(KEY_TOKEN, registered.token).putString(KEY_PUBLIC_ID, registered.publicId).apply()
@@ -106,8 +130,17 @@ class ApiClient(context: Context, private val baseUrl: String) {
             tokenLock.withLock { if (prefs.getString(KEY_TOKEN, null) == token) forgetIdentity() }
             return callRaw(method, path, body, retryAuth = false)
         }
+        if (status == HTTP_UPGRADE_REQUIRED) {
+            onUpdateRequired?.invoke(errorField(text, "message").orEmpty())
+        }
         if (status !in 200..299) throw ApiException(status, errorCode(text))
         return text
+    }
+
+    /** Mindestversion und neuestes Release – ohne Anmeldung, damit auch gesperrte Versionen es abfragen können. */
+    suspend fun config(): UpdateConfig = withContext(Dispatchers.IO) {
+        val request = Request.Builder().url("$baseUrl/api/config").build()
+        http.newCall(request).execute().use { json.decodeFromString(UpdateConfig.serializer(), it.bodyOrThrow()) }
     }
 
     /** Hält eine WebSocket-Verbindung offen und verbindet sich bei Abbrüchen mit Backoff neu. */
@@ -158,9 +191,10 @@ class ApiClient(context: Context, private val baseUrl: String) {
         return text
     }
 
-    private fun errorCode(text: String): String =
-        runCatching { json.parseToJsonElement(text).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
-            ?: "unknown"
+    private fun errorCode(text: String): String = errorField(text, "error") ?: "unknown"
+
+    private fun errorField(text: String, field: String): String? =
+        runCatching { json.parseToJsonElement(text).jsonObject[field]?.jsonPrimitive?.content }.getOrNull()
 
     companion object {
         private const val KEY_TOKEN = "token"
@@ -168,5 +202,6 @@ class ApiClient(context: Context, private val baseUrl: String) {
         private val EMPTY_BODY = ByteArray(0).toRequestBody(null)
         val JPEG = "image/jpeg".toMediaType()
         val JSON = "application/json".toMediaType()
+        const val HTTP_UPGRADE_REQUIRED = 426
     }
 }

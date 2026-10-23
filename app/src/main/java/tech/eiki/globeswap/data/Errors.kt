@@ -6,6 +6,7 @@ import java.io.IOException
 fun Throwable.userMessage(): String = when (this) {
     is ApiException -> when (code) {
         "banned" -> "Your account has been blocked because of reports."
+        "update_required" -> "Please update GlobeSwap to continue."
         "too_many_waiting" -> "You already have several photos waiting for a swap. Please wait until they have been swapped."
         "rate_limited" -> "Not so fast – please wait a moment."
         "invalid_image" -> "The photo could not be processed."

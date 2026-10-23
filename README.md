@@ -20,6 +20,10 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
 * Unterhaltungen nur aus Fotos, live per WebSocket, Liste mit Badge für neue Fotos
 * Melden, Blockieren, alle eigenen Daten löschen
 * Fotos lassen sich nicht speichern; Screenshots und Bildschirmaufnahmen sind in der ganzen App gesperrt (`FLAG_SECURE`)
+* Updates: Der Server kann im Admin-Bereich eine Mindestversion festlegen – ältere Versionen zeigen dann
+  „Update required“ und sind gesperrt. Bei Installation über F-Droid/IzzyOnDroid oder GitHub zeigt die App
+  einen Hinweis, sobald ein neues GitHub-Release erschienen ist (der Server fragt GitHub, nicht die App;
+  bei Play-Store-Installationen übernimmt Google die Updates)
 * Benachrichtigungen ohne Google-Dienste (Abfrage etwa alle 15 Minuten)
 * Jede Person hat eine eindeutige öffentliche UUID („Stranger“ + UUID)
 * Links zu Datenschutz, Nutzungsbedingungen, Impressum und Datenlöschung (Chats → ⋮ → About & privacy)

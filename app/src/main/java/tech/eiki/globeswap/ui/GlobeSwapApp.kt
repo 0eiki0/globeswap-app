@@ -5,6 +5,15 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.foundation.layout.Column
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
+import tech.eiki.globeswap.BuildConfig
+import tech.eiki.globeswap.data.ServiceLocator
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.Badge
@@ -48,6 +57,24 @@ fun GlobeSwapApp() {
     val prefs = remember { context.getSharedPreferences(PREFS, Context.MODE_PRIVATE) }
     var onboarded by remember { mutableStateOf(prefs.getBoolean(KEY_ONBOARDED, false)) }
 
+    // Beim Start und bei jeder Rückkehr in die App: Mindestversion und neueste Version beim Server abfragen.
+    val updates = ServiceLocator.updates
+    val update by updates.state.collectAsStateWithLifecycle()
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { updates.refresh() }
+    }
+    if (update.required) {
+        ForcedUpdateScreen(
+            message = update.message,
+            installedVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            onUpdate = { updates.openUpdate(context) },
+            onCheckAgain = { scope.launch { updates.refresh() } },
+        )
+        return
+    }
+
     if (!onboarded) {
         OnboardingScreen(onAccept = {
             prefs.edit().putBoolean(KEY_ONBOARDED, true).apply()
@@ -66,6 +93,15 @@ fun GlobeSwapApp() {
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
             if (route == ROUTE_SWAP || route == ROUTE_CONVERSATIONS) {
+              Column {
+                update.available?.let { release ->
+                    UpdateBanner(
+                        release = release,
+                        channel = updates.channel,
+                        onUpdate = { updates.openUpdate(context) },
+                        onLater = { updates.dismiss(release.versionCode) },
+                    )
+                }
                 NavigationBar {
                     NavigationBarItem(
                         selected = route == ROUTE_SWAP,
@@ -84,6 +120,7 @@ fun GlobeSwapApp() {
                         label = { Text("Chats") },
                     )
                 }
+              }
             }
         },
     ) { padding ->
