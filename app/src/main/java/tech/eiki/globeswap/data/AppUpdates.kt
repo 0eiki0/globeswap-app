@@ -47,7 +47,13 @@ enum class InstallChannel(val header: String) {
 data class LatestRelease(val versionCode: Int, val versionName: String, val url: String = "")
 
 @Serializable
-data class UpdateConfig(val minVersionCode: Int = 0, val updateMessage: String = "", val latest: LatestRelease? = null)
+data class UpdateConfig(
+    val minVersionCode: Int = 0,
+    val updateMessage: String = "",
+    val latest: LatestRelease? = null,
+    /** Der Server verschickt Push-Mitteilungen (Firebase). */
+    val push: Boolean = false,
+)
 
 /** Was die Oberfläche zeigt: Pflicht-Update (sperrt die App) oder Hinweis auf eine neue Version. */
 data class UpdateUi(

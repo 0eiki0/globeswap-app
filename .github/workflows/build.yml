@@ -3,6 +3,7 @@
 #  - Debug-APK zum Herunterladen (Artefakt "globeswap-debug-apk")
 #  - Signierte Release-APK und App-Bundle (Artefakt "globeswap-release-…"), sobald die
 #    Secrets SIGNING_KEYSTORE_BASE64 und SIGNING_PASSWORD im Repository hinterlegt sind.
+#  - Push-Mitteilungen (Firebase), sobald das Secret GOOGLE_SERVICES_JSON hinterlegt ist.
 #  - Bei einem Tag wie v1.4 oder per "Run workflow" mit Versionsnummer: GitHub-Release mit der
 #    signierten APK zum Herunterladen (Version "1.4" kommt aus Tag bzw. Eingabe).
 name: Build
@@ -38,6 +39,7 @@ jobs:
     env:
       SIGNING_KEYSTORE_BASE64: ${{ secrets.SIGNING_KEYSTORE_BASE64 }}
       SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+      GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
     steps:
       - uses: actions/checkout@v7
 
@@ -73,6 +75,14 @@ jobs:
           java-version: "17"
 
       - uses: gradle/actions/setup-gradle@v6
+
+      - name: Push-Mitteilungen
+        run: |
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            echo "::notice::Push-Mitteilungen: an (google-services.json aus dem Secret GOOGLE_SERVICES_JSON)"
+          else
+            echo "::notice::Push-Mitteilungen: aus – Secret GOOGLE_SERVICES_JSON fehlt, die App fragt alle 15 Minuten nach"
+          fi
 
       - name: Tests
         run: ./gradlew testDebugUnitTest --stacktrace

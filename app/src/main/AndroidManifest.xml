@@ -24,5 +24,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Push-Mitteilungen (Firebase Cloud Messaging), nur wenn der Server Push verschickt. -->
+        <service
+            android:name=".notifications.PushService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <!-- Keinen Push-Schlüssel automatisch holen: das macht die App selbst, erst nach der Anmeldung. -->
+        <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" />
+        <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" />
     </application>
 </manifest>

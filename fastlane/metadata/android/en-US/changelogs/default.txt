@@ -3,3 +3,4 @@
 • Notice when a new version is available
 • More privacy: photos can't be saved, screenshots and screen recordings are blocked
 • Deleted photos leave a note in the chat
+• Instant notifications for new photos

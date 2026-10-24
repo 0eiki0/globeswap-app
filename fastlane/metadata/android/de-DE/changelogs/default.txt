@@ -3,3 +3,4 @@
 • Hinweis, wenn eine neue Version erschienen ist
 • Mehr Privatsphäre: Fotos lassen sich nicht speichern, Screenshots und Bildschirmaufnahmen sind gesperrt
 • Gelöschte Fotos zeigen im Chat einen Hinweis
+• Sofortige Benachrichtigung bei neuen Fotos

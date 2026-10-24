@@ -25,7 +25,8 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
   „Update required“ und sind gesperrt. Bei Installation über F-Droid/IzzyOnDroid oder GitHub zeigt die App
   einen Hinweis, sobald ein neues GitHub-Release erschienen ist (der Server fragt GitHub, nicht die App;
   bei Play-Store-Installationen übernimmt Google die Updates)
-* Benachrichtigungen ohne Google-Dienste (Abfrage etwa alle 15 Minuten)
+* Benachrichtigungen: sofort per Push (Firebase Cloud Messaging), wenn App und Server dafür eingerichtet sind;
+  sonst und auf Geräten ohne Google-Dienste Abfrage etwa alle 15 Minuten
 * Jede Person hat eine eindeutige öffentliche UUID („Stranger“ + UUID)
 * Links zu Datenschutz, Nutzungsbedingungen, Impressum und Datenlöschung (Chats → ⋮ → About & privacy)
 
@@ -99,6 +100,17 @@ Signierte Release-APK und App-Bundle (`globeswap-release`) entstehen zusätzlich
 |---|---|
 | `SIGNING_KEYSTORE_BASE64` | der Signaturschlüssel als Base64: `base64 -w0 photoswap-release.jks` |
 | `SIGNING_PASSWORD` | das Passwort aus `keystore.properties` (Store- und Key-Passwort sind gleich) |
+| `GOOGLE_SERVICES_JSON` | optional, für Push: der komplette Inhalt der `google-services.json` aus der Firebase-Konsole |
+
+## Push-Mitteilungen
+
+Die App nutzt Firebase Cloud Messaging, ohne das Google-Services-Gradle-Plugin: `app/build.gradle.kts` liest
+die Werte aus `google-services.json` (lokal unter `app/google-services.json`, in GitHub Actions aus dem Secret
+`GOOGLE_SERVICES_JSON`). Ohne die Datei baut die App ohne Push.
+
+Die App meldet sich nur bei Google an, wenn der Server Push verschickt (`/api/config` → `push`, auf dem Server
+`FCM_CREDENTIALS_FILE`), und erst nachdem sie beim Server angemeldet ist. Ein Push enthält nur „neues Foto in
+Unterhaltung X“; die App lädt den Rest von deinem Server. Die Abfrage alle 15 Minuten bleibt als Reserve.
 
 ## F-Droid / IzzyOnDroid
 

@@ -24,6 +24,14 @@ android {
 
         val serverUrl = providers.gradleProperty("globeswap.serverUrl").get().trimEnd('/')
         buildConfigField("String", "SERVER_URL", "\"$serverUrl\"")
+
+        // Push (Firebase Cloud Messaging): google-services.json aus der Firebase-Konsole – lokal als
+        // app/google-services.json, in GitHub Actions als Secret GOOGLE_SERVICES_JSON. Ohne die Datei
+        // baut die App ohne Push und fragt wie bisher alle 15 Minuten nach.
+        val firebase = firebaseConfig()
+        listOf("PROJECT_ID", "SENDER_ID", "APP_ID", "API_KEY").forEach {
+            buildConfigField("String", "FIREBASE_$it", "\"${firebase[it].orEmpty()}\"")
+        }
     }
 
     // Signaturschlüssel liegt nicht im Projekt-Code: signing/keystore.properties (siehe README).
@@ -102,6 +110,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-process:2.8.7")
     implementation("androidx.work:work-runtime-ktx:2.10.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-messaging")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
 
     // UI-Tests ohne Gerät (Robolectric rendert echte Pixel, Roborazzi speichert Screenshots)
@@ -113,4 +123,23 @@ dependencies {
     testImplementation("io.coil-kt:coil-test:2.7.0")
     testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+}
+
+/** Liest die Werte für Firebase aus google-services.json (ohne das Google-Services-Gradle-Plugin). */
+fun firebaseConfig(): Map<String, String> {
+    val text = providers.environmentVariable("GOOGLE_SERVICES_JSON").orNull?.takeIf { it.isNotBlank() }
+        ?: file("google-services.json").takeIf { it.exists() }?.readText()
+        ?: return emptyMap()
+    val json = groovy.json.JsonSlurper().parseText(text) as Map<*, *>
+    val project = json["project_info"] as Map<*, *>
+    val client = (json["client"] as List<*>).map { it as Map<*, *> }.firstOrNull {
+        val info = (it["client_info"] as Map<*, *>)["android_client_info"] as Map<*, *>
+        info["package_name"] == "tech.eiki.globeswap"
+    } ?: error("google-services.json enthält keine App mit dem Paketnamen tech.eiki.globeswap")
+    return mapOf(
+        "PROJECT_ID" to project["project_id"].toString(),
+        "SENDER_ID" to project["project_number"].toString(),
+        "APP_ID" to (client["client_info"] as Map<*, *>)["mobilesdk_app_id"].toString(),
+        "API_KEY" to ((client["api_key"] as List<*>).first() as Map<*, *>)["current_key"].toString(),
+    )
 }

@@ -43,6 +43,9 @@ class ApiClient(
     /** Wird aufgerufen, wenn der Server die App-Version ablehnt (HTTP 426, Mindestversion im Admin-Bereich). */
     var onUpdateRequired: ((message: String) -> Unit)? = null
 
+    /** Wird nach der ersten anonymen Anmeldung beim Server aufgerufen (z. B. um Push einzurichten). */
+    var onRegistered: (() -> Unit)? = null
+
     private val prefs = context.getSharedPreferences("globeswap_api", Context.MODE_PRIVATE)
     private val tokenLock = Mutex()
     internal val json = Json { ignoreUnknownKeys = true }
@@ -104,6 +107,7 @@ class ApiClient(
                 json.decodeFromString(RegisterResponse.serializer(), response.bodyOrThrow())
             }
             prefs.edit().putString(KEY_TOKEN, registered.token).putString(KEY_PUBLIC_ID, registered.publicId).apply()
+            onRegistered?.invoke()
             registered.token
         }
     }

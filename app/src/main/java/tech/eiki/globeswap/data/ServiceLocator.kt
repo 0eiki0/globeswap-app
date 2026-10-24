@@ -1,9 +1,15 @@
 package tech.eiki.globeswap.data
 
 import android.content.Context
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import tech.eiki.globeswap.BuildConfig
 
 object ServiceLocator {
+    /** Für Hintergrundarbeit ohne Bildschirm, z. B. das Anmelden des Push-Schlüssels. */
+    val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     lateinit var api: ApiClient
         private set
     lateinit var repository: SwapRepository

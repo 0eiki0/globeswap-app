@@ -118,6 +118,12 @@ class SwapRepository(private val api: ApiClient) {
         localChanges.tryEmit(Unit)
     }
 
+    /** Meldet den Push-Schlüssel (Firebase) dieses Geräts beim Server an. */
+    suspend fun registerPushToken(token: String) {
+        val body = buildJsonObject { put("token", token) }
+        api.callRaw("POST", "/api/push-token", body.toString().toRequestBody(ApiClient.JSON))
+    }
+
     // ------------------------------------------------------- Moderation & Konto
 
     suspend fun report(conversationId: String, messageId: String?, reason: ReportReason) {

@@ -57,6 +57,26 @@ class DeleteTest {
     }
 
     @Test
+    fun pushTokenIsRegisteredAfterFirstSignIn() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        val api = ApiClient(context, server.url("").toString().trimEnd('/'))
+        var registered = 0
+        api.onRegistered = { registered++ }
+        val repo = SwapRepository(api)
+        server.enqueue(MockResponse().setResponseCode(204))
+        server.enqueue(MockResponse().setResponseCode(204))
+        repo.registerPushToken("fcm-token-1")
+        repo.registerPushToken("fcm-token-2") // schon angemeldet: kein zweites Mal
+        assertEquals(1, registered)
+        server.takeRequest() // Anmeldung
+        server.takeRequest().let {
+            assertEquals("POST", it.method)
+            assertEquals("/api/push-token", it.path)
+            assertEquals("""{"token":"fcm-token-1"}""", it.body.readUtf8())
+        }
+    }
+
+    @Test
     fun foreignPhotoCannotBeDeleted() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"not_yours"}"""))
         val error = runCatching { repo.deleteMessage("c1", "m2") }.exceptionOrNull()

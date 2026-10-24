@@ -20,3 +20,6 @@ build/
 *.jks
 *.keystore
 keystore.properties
+
+# Firebase-Konfiguration (kommt in GitHub Actions aus dem Secret GOOGLE_SERVICES_JSON)
+/app/google-services.json
