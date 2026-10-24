@@ -26,6 +26,8 @@ data class Message(
 data class ConversationDetail(
     val conversation: Conversation,
     val messages: List<Message>,
+    /** So viele neueste Fotos behält der Server pro Unterhaltung (0 = alle). */
+    val maxPhotos: Int = 0,
 )
 
 sealed interface SwapResult {

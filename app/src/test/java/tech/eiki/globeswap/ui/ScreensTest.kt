@@ -21,6 +21,7 @@ import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.InstallChannel
 import tech.eiki.globeswap.data.LatestRelease
+import tech.eiki.globeswap.ui.chat.PhotoLimitHint
 import tech.eiki.globeswap.ui.conversations.AboutDialog
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
@@ -53,6 +54,12 @@ class ScreensTest {
         }
         compose.onNodeWithText("GlobeSwap 1.5 is available").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/update-banner.png")
+    }
+
+    @Test
+    fun photoLimitHint() {
+        compose.setContent { GlobeSwapTheme { PhotoLimitHint(10) } }
+        compose.onNodeWithText("Only the latest 10 photos are kept – older ones disappear for both of you.").assertExists()
     }
 
     @Test

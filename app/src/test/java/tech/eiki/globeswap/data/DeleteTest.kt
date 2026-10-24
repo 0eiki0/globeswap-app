@@ -48,6 +48,15 @@ class DeleteTest {
     }
 
     @Test
+    fun conversationReportsPhotoLimit() {
+        val json = kotlinx.serialization.json.Json { ignoreUnknownKeys = true }
+        val body = """{"conversation":{"id":"c1","label":"x","lastMessageAt":1,"lastFromMe":false,"lastPhotoId":"p","unread":false,"blocked":false},"messages":[],"maxPhotos":10}"""
+        assertEquals(10, json.decodeFromString(ConversationDetail.serializer(), body).maxPhotos)
+        // Ältere Server ohne Grenze: 0 = kein Hinweis.
+        assertEquals(0, json.decodeFromString(ConversationDetail.serializer(), body.replace(""","maxPhotos":10""", "")).maxPhotos)
+    }
+
+    @Test
     fun foreignPhotoCannotBeDeleted() = runBlocking {
         server.enqueue(MockResponse().setResponseCode(403).setBody("""{"error":"not_yours"}"""))
         val error = runCatching { repo.deleteMessage("c1", "m2") }.exceptionOrNull()

@@ -1,4 +1,4 @@
 • Delete whole chats and your own photos – for the other person too
-• Chats now take turns: reply once the stranger has sent a photo
+• Chats take turns, and only the latest 10 photos are kept
 • Notice when a new version is available
 • More privacy: photos can't be saved, screenshots and screen recordings are blocked

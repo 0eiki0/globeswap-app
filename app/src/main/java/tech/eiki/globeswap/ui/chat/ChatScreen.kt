@@ -59,6 +59,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -79,6 +80,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     val loaded = state as? ChatViewModel.DetailState.Loaded
     val conversation = loaded?.detail?.conversation
     val messages = loaded?.detail?.messages.orEmpty()
+    val maxPhotos = loaded?.detail?.maxPhotos ?: 0
     val sending by vm.sending.collectAsStateWithLifecycle()
 
     var replying by remember { mutableStateOf(false) }
@@ -173,6 +175,9 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             contentPadding = PaddingValues(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (maxPhotos > 0) {
+                item(key = "limit") { PhotoLimitHint(maxPhotos) }
+            }
             items(messages, key = { it.id }) { message ->
                 PhotoBubble(
                     message = message,
@@ -242,6 +247,18 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
 }
 
 private data class ReportTarget(val messageId: String?)
+
+/** Nur die neuesten Fotos bleiben – ältere verschwinden bei beiden. */
+@Composable
+internal fun PhotoLimitHint(maxPhotos: Int) {
+    Text(
+        "Only the latest $maxPhotos photos are kept – older ones disappear for both of you.",
+        style = MaterialTheme.typography.labelSmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+    )
+}
 
 @Composable
 private fun WaitingForReply() {
