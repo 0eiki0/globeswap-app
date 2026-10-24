@@ -8,6 +8,7 @@ import tech.eiki.globeswap.data.ConversationDetail
 import tech.eiki.globeswap.data.ReportReason
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.userMessage
+import tech.eiki.globeswap.notifications.NewPhotoNotifier
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,7 +55,10 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         }
     }
 
-    fun markSeen() = launchSafely(null) { repo.markSeen(conversationId) }
+    fun markSeen() = launchSafely(null) {
+        repo.markSeen(conversationId)
+        NewPhotoNotifier.clearIfAllRead(ServiceLocator.appContext)
+    }
 
     fun report(reason: ReportReason, messageId: String?, alsoBlock: Boolean, onBlocked: () -> Unit) =
         launchSafely("Could not report") {

@@ -46,6 +46,19 @@ object NewPhotoNotifier {
         return true
     }
 
+    /**
+     * Nach dem Lesen: Ist nichts Ungelesenes mehr da, verschwindet die Benachrichtigung – und mit ihr der
+     * Punkt am App-Symbol (er gehört zur Benachrichtigung). Sonst würde sie nur beim Antippen verschwinden.
+     */
+    suspend fun clearIfAllRead(context: Context) {
+        val conversations = runCatching { ServiceLocator.repository.fetchConversations() }.getOrNull() ?: return
+        if (conversations.none { it.unread }) cancel(context)
+    }
+
+    fun cancel(context: Context) {
+        NotificationManagerCompat.from(context).cancel(NOTIFICATION_ID)
+    }
+
     fun createChannel(context: Context) {
         val channel = NotificationChannel(CHANNEL_ID, "New photos", NotificationManager.IMPORTANCE_DEFAULT)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
