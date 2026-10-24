@@ -12,6 +12,11 @@ data class Conversation(
     val lastPhotoId: String,
     val unread: Boolean,
     val blocked: Boolean,
+    /** Land der anderen Person (ISO-Code), wenn sie es teilt. */
+    val country: String = "",
+    /** Beendet: keine neuen Fotos mehr. */
+    val ended: Boolean = false,
+    val endedByMe: Boolean = false,
 )
 
 @Serializable
@@ -22,7 +27,34 @@ data class Message(
     val createdAt: Long,
     /** Das Foto wurde gelöscht – an seiner Stelle steht nur ein Hinweis. */
     val deleted: Boolean = false,
+    /** Herkunftsland (ISO-Code), wenn die Person es teilt. */
+    val country: String = "",
+    /** Emoji-Reaktion des Gegenübers auf dieses Foto. */
+    val reaction: String = "",
 )
+
+/** Einstellungen der Person auf dem Server. */
+@Serializable
+data class UserSettings(
+    val shareCountry: Boolean = true,
+    val matchPref: String = MatchPref.ANY,
+    /** Das gerade erkannte eigene Land (nur wenn geteilt). */
+    val country: String = "",
+    /** Der Server kennt überhaupt Länder. */
+    val geoEnabled: Boolean = false,
+)
+
+object MatchPref {
+    const val ANY = "any"
+    const val NEAR = "near"
+    const val FAR = "far"
+}
+
+@Serializable
+data class WorldCountry(val country: String, val continent: String = "", val photos: Int = 0, val firstAt: Long = 0)
+
+@Serializable
+data class World(val countries: List<WorldCountry> = emptyList(), val continents: Int = 0)
 
 @Serializable
 data class ConversationDetail(

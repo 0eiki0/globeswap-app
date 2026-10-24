@@ -19,6 +19,11 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
   Sticker per Anfasser oder mit zwei Fingern drehen und skalieren
 * Unterhaltungen nur aus Fotos, immer im Wechsel (erst antworten, wenn das Gegenüber ein Foto geschickt hat) – es bleiben nur die neuesten 10 Fotos (einstellbar am Server), live per WebSocket, Liste mit Badge für neue Fotos
 * Ganze Chats (Chat → ⋮ → Delete chat) und eigene Fotos (lange drücken oder im Vollbild 🗑) löschen – auch bei der anderen Person
+* Herkunftsland unter jedem Foto (Server ermittelt es aus der IP-Adresse, abschaltbar unter Chats → ⋮ → Settings)
+  und „Your world“: Weltkarte der Länder, aus denen man Fotos bekam (Natural Earth, `assets/world.txt`)
+* Tausch-Wunsch egal / nah / fern (Kontinent), Tagesthema über der Kamera
+* Reaktionen auf Fotos (doppelt tippen = ❤️, lange drücken = Auswahl), Chat beenden ohne Blockieren
+* Altersabfrage (Monat und Jahr, ab 16) vor dem ersten Start; gespeichert wird nur das Ergebnis
 * Melden, Blockieren, alle eigenen Daten löschen
 * Fotos lassen sich nicht speichern; Screenshots und Bildschirmaufnahmen sind in der ganzen App gesperrt (`FLAG_SECURE`)
 * Updates: Der Server kann im Admin-Bereich eine Mindestversion festlegen – ältere Versionen zeigen dann

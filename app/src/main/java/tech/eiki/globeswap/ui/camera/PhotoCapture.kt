@@ -82,6 +82,7 @@ fun PhotoCapture(
     modifier: Modifier = Modifier,
     hint: String? = null,
     onCancel: (() -> Unit)? = null,
+    theme: String = "",
 ) {
     val context = LocalContext.current
     var hasPermission by remember {
@@ -104,7 +105,7 @@ fun PhotoCapture(
                 onRetake = { captured = null },
                 onConfirm = { edited -> onConfirm(edited); captured = null },
             )
-            else -> CameraView(hint = hint, onCaptured = { captured = it })
+            else -> CameraView(hint = hint, theme = theme, onCaptured = { captured = it })
         }
         if (onCancel != null && photo == null) {
             IconButton(onClick = onCancel, modifier = Modifier.statusBarsPadding().padding(8.dp)) {
@@ -115,7 +116,7 @@ fun PhotoCapture(
 }
 
 @Composable
-private fun CameraView(hint: String?, onCaptured: (ByteArray) -> Unit) {
+private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> Unit) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
@@ -194,6 +195,10 @@ private fun CameraView(hint: String?, onCaptured: (ByteArray) -> Unit) {
             }
         }
 
+        if (theme.isNotBlank()) {
+            DailyTheme(theme, Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 16.dp, start = 24.dp, end = 24.dp))
+        }
+
         Column(
             Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -255,5 +260,19 @@ private fun PermissionMissing(onRequest: () -> Unit) {
         )
         Spacer(Modifier.size(16.dp))
         Button(onClick = onRequest) { Text("Allow camera") }
+    }
+}
+
+/** Tagesthema vom Server als kleine Anregung über dem Kamerabild. */
+@Composable
+internal fun DailyTheme(theme: String, modifier: Modifier = Modifier) {
+    Column(
+        modifier
+            .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.large)
+            .padding(horizontal = 16.dp, vertical = 10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Text("TODAY'S THEME", color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelSmall)
+        Text(theme, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
     }
 }

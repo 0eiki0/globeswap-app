@@ -124,6 +124,31 @@ class SwapRepository(private val api: ApiClient) {
         api.callRaw("POST", "/api/push-token", body.toString().toRequestBody(ApiClient.JSON))
     }
 
+    /** Emoji-Reaktion auf ein Foto des Gegenübers setzen ("" entfernt sie). */
+    suspend fun react(conversationId: String, messageId: String, emoji: String) {
+        val body = buildJsonObject { put("emoji", emoji) }
+        api.callRaw("PUT", "/api/conversations/$conversationId/messages/$messageId/reaction", body.toString().toRequestBody(ApiClient.JSON))
+        localChanges.tryEmit(Unit)
+    }
+
+    /** Chat beenden: beide sehen ihn noch, aber niemand kann mehr Fotos schicken. */
+    suspend fun endConversation(conversationId: String) {
+        api.callRaw("POST", "/api/conversations/$conversationId/end")
+        localChanges.tryEmit(Unit)
+    }
+
+    suspend fun settings(): UserSettings = api.call("GET", "/api/settings", UserSettings.serializer())
+
+    suspend fun updateSettings(shareCountry: Boolean? = null, matchPref: String? = null): UserSettings {
+        val body = buildJsonObject {
+            shareCountry?.let { put("shareCountry", it) }
+            matchPref?.let { put("matchPref", it) }
+        }
+        return api.call("PUT", "/api/settings", UserSettings.serializer(), body.toString().toRequestBody(ApiClient.JSON))
+    }
+
+    suspend fun world(): World = api.call("GET", "/api/world", World.serializer())
+
     // ------------------------------------------------------- Moderation & Konto
 
     suspend fun report(conversationId: String, messageId: String?, reason: ReportReason) {

@@ -53,6 +53,8 @@ data class UpdateConfig(
     val latest: LatestRelease? = null,
     /** Der Server verschickt Push-Mitteilungen (Firebase). */
     val push: Boolean = false,
+    /** Tagesthema, z. B. "The view from your window" (leer = keins). */
+    val theme: String = "",
 )
 
 /** Was die Oberfläche zeigt: Pflicht-Update (sperrt die App) oder Hinweis auf eine neue Version. */
@@ -85,12 +87,16 @@ class AppUpdates(
     private val prefs = context.getSharedPreferences("globeswap_updates", Context.MODE_PRIVATE)
     private val _state = MutableStateFlow(UpdateUi())
     val state: StateFlow<UpdateUi> = _state.asStateFlow()
+    private val _theme = MutableStateFlow("")
+    /** Tagesthema vom Server, kommt mit derselben Abfrage. */
+    val theme: StateFlow<String> = _theme.asStateFlow()
     private var lastConfig: UpdateConfig? = null
 
     suspend fun refresh() {
         runCatching { api.config() }
             .onSuccess { config ->
                 lastConfig = config
+                _theme.value = config.theme
                 _state.value = decideUpdate(currentCode, channel, config, prefs.getInt(KEY_DISMISSED, 0))
             }
             .onFailure { Log.w("AppUpdates", "Update-Info nicht abrufbar", it) }

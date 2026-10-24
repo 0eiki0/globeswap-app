@@ -83,6 +83,16 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
         _toasts.emit("Photo deleted.")
     }
 
+    /** Reaktion auf ein Foto des Gegenübers setzen; dasselbe Emoji noch einmal entfernt sie. */
+    fun react(messageId: String, emoji: String) = launchSafely("Could not react") {
+        repo.react(conversationId, messageId, emoji)
+    }
+
+    fun endChat() = launchSafely("Could not end chat") {
+        repo.endConversation(conversationId)
+        _toasts.emit("Chat ended.")
+    }
+
     private fun launchSafely(errorMessage: String?, block: suspend () -> Unit) {
         viewModelScope.launch {
             try {

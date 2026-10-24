@@ -24,11 +24,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.ui.camera.PhotoCapture
 
 @Composable
 fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
     val state by vm.state.collectAsStateWithLifecycle()
+    val theme by ServiceLocator.updates.theme.collectAsStateWithLifecycle()
 
     LaunchedEffect(state) {
         val matched = state as? SwapUiState.Matched ?: return@LaunchedEffect
@@ -41,6 +43,7 @@ fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
             confirmLabel = "Swap!",
             onConfirm = vm::swap,
             hint = "Take a photo – it goes to a stranger somewhere in the world, and you get theirs.",
+            theme = theme,
         )
         SwapUiState.Sending -> StatusPanel(title = "Your photo is on its way…", loading = true)
         is SwapUiState.Waiting -> StatusPanel(

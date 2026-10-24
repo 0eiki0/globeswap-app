@@ -1,6 +1,6 @@
-• Delete whole chats and your own photos – for the other person too
-• Chats take turns, and only the latest 10 photos are kept
-• Notice when a new version is available
-• More privacy: photos can't be saved, screenshots and screen recordings are blocked
-• Deleted photos leave a note in the chat
-• Instant notifications for new photos
+• Country under every photo and your own world map (can be switched off in settings)
+• Swap preference: anyone, nearby or far away
+• Daily theme for inspiration
+• React to photos, end chats, delete chats and your own photos
+• Chats take turns, the latest 10 photos are kept
+• Instant notifications, update notice, age check

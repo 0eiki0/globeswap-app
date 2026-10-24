@@ -79,7 +79,7 @@ fun OnboardingScreen(onAccept: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Checkbox(checked = accepted, onCheckedChange = null)
-                Text("I am at least 16 years old and will follow the rules.", Modifier.padding(start = 12.dp))
+                Text("I will follow the rules.", Modifier.padding(start = 12.dp))
             }
             Text(
                 buildAnnotatedString {

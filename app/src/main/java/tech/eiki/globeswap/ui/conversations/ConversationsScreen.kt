@@ -15,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -42,6 +44,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import tech.eiki.globeswap.data.Conversation
+import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.ui.StrangerId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -53,6 +56,8 @@ fun ConversationsScreen(
     onDeleteAccount: () -> Unit,
     publicId: String? = null,
     onAboutOpened: () -> Unit = {},
+    onOpenWorld: () -> Unit = {},
+    onOpenSettings: () -> Unit = {},
 ) {
     var showAbout by remember { mutableStateOf(false) }
     if (showAbout) AboutDialog(publicId, onDismiss = { showAbout = false })
@@ -64,8 +69,14 @@ fun ConversationsScreen(
             TopAppBar(
                 title = { Text("Chats") },
                 actions = {
+                    IconButton(onClick = onOpenWorld) { Icon(Icons.Default.Public, contentDescription = "Your world map") }
                     IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = "More") }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+                        DropdownMenuItem(
+                            text = { Text("Settings") },
+                            leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
+                            onClick = { menuOpen = false; onOpenSettings() },
+                        )
                         DropdownMenuItem(
                             text = { Text("About & privacy") },
                             leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
@@ -118,7 +129,7 @@ fun ConversationsScreen(
                     headlineContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                "Stranger",
+                                listOf("Stranger", Countries.flag(conversation.country)).filter { it.isNotEmpty() }.joinToString(" "),
                                 fontWeight = if (unread) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.weight(1f),
                             )
@@ -134,6 +145,7 @@ fun ConversationsScreen(
                         Text(
                             when {
                                 unread -> "New photo for you!"
+                                conversation.ended -> "Chat ended"
                                 conversation.lastFromMe -> "Waiting for their photo"
                                 else -> "Your turn"
                             },

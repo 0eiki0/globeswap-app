@@ -16,10 +16,12 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
@@ -30,6 +32,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.DoNotDisturbOn
 import androidx.compose.material.icons.filled.HideImage
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
@@ -45,6 +48,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -63,12 +67,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.ReportReason
 import tech.eiki.globeswap.ui.StrangerId
@@ -91,13 +97,17 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     var confirmBlock by remember { mutableStateOf(false) }
     var viewing by remember { mutableStateOf<Message?>(null) }
     var confirmDeleteChat by remember { mutableStateOf(false) }
+    var confirmEndChat by remember { mutableStateOf(false) }
+    var reactTarget by remember { mutableStateOf<Message?>(null) }
     var deleteTarget by remember { mutableStateOf<Message?>(null) }
     val listState = rememberLazyListState()
 
     LaunchedEffect(Unit) { vm.toasts.collect { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() } }
+    // Die Liste ist umgedreht (reverseLayout): Index 0 ist das neueste Foto ganz unten. So steht ein Chat
+    // beim Öffnen immer ganz unten, auch bevor die Fotos geladen sind.
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.lastIndex)
+            listState.animateScrollToItem(0)
             vm.markSeen()
         }
     }
@@ -120,7 +130,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             TopAppBar(
                 title = {
                     Column {
-                        Text("Stranger")
+                        Text(listOf("Stranger", Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
                         StrangerId(conversation?.label.orEmpty())
                     }
                 },
@@ -142,6 +152,13 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                             leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
                             onClick = { menuOpen = false; confirmBlock = true },
                         )
+                        if (conversation?.ended == false) {
+                            DropdownMenuItem(
+                                text = { Text("End chat") },
+                                leadingIcon = { Icon(Icons.Default.DoNotDisturbOn, contentDescription = null) },
+                                onClick = { menuOpen = false; confirmEndChat = true },
+                            )
+                        }
                         DropdownMenuItem(
                             text = { Text("Delete chat") },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
@@ -159,6 +176,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                         Text("This chat no longer exists.", color = MaterialTheme.colorScheme.error)
                     state == ChatViewModel.DetailState.Loading -> CircularProgressIndicator()
                     blocked -> Text("This chat is blocked.", color = MaterialTheme.colorScheme.error)
+                    conversation?.ended == true -> ChatEnded(byMe = conversation.endedByMe)
                     sending -> CircularProgressIndicator()
                     // Immer im Wechsel: erst wieder antworten, wenn das Gegenüber ein Foto geschickt hat.
                     conversation?.lastFromMe == true -> WaitingForReply()
@@ -171,28 +189,16 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             }
         },
     ) { padding ->
-        LazyColumn(
-            state = listState,
+        MessageList(
+            messages = messages,
+            maxPhotos = maxPhotos,
+            photoUrl = vm::photoUrl,
+            listState = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentPadding = PaddingValues(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            if (maxPhotos > 0) {
-                item(key = "limit") { PhotoLimitHint(maxPhotos) }
-            }
-            items(messages, key = { it.id }) { message ->
-                if (message.deleted) {
-                    DeletedPhoto(message)
-                    return@items
-                }
-                PhotoBubble(
-                    message = message,
-                    url = vm.photoUrl(message.photoId),
-                    onClick = { viewing = message },
-                    onLongClick = { if (message.mine) deleteTarget = message },
-                )
-            }
-        }
+            onOpen = { viewing = it },
+            onLongPress = { if (it.mine) deleteTarget = it else reactTarget = it },
+            onDoubleTap = { vm.react(it.id, if (it.reaction == HEART) "" else HEART) },
+        )
     }
 
     viewing?.let { message ->
@@ -214,6 +220,24 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                 TextButton(onClick = { deleteTarget = null; vm.deletePhoto(message.id) }) { Text("Delete") }
             },
             dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel") } },
+        )
+    }
+
+    reactTarget?.let { message ->
+        ReactionPicker(
+            current = message.reaction,
+            onPick = { emoji -> reactTarget = null; vm.react(message.id, if (emoji == message.reaction) "" else emoji) },
+            onDismiss = { reactTarget = null },
+        )
+    }
+
+    if (confirmEndChat) {
+        AlertDialog(
+            onDismissRequest = { confirmEndChat = false },
+            title = { Text("End this chat?") },
+            text = { Text("Neither of you can send more photos. The chat stays visible, and you might meet again in a future swap.") },
+            confirmButton = { TextButton(onClick = { confirmEndChat = false; vm.endChat() }) { Text("End chat") } },
+            dismissButton = { TextButton(onClick = { confirmEndChat = false }) { Text("Cancel") } },
         )
     }
 
@@ -252,7 +276,105 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     }
 }
 
+/**
+ * Die Fotos eines Chats. Die Liste ist umgedreht (reverseLayout), damit sie beim Öffnen immer ganz unten
+ * beim neuesten Foto steht – auch bevor die Bilder geladen sind.
+ */
+@Composable
+internal fun MessageList(
+    messages: List<Message>,
+    maxPhotos: Int,
+    photoUrl: (String) -> String,
+    listState: LazyListState,
+    modifier: Modifier = Modifier,
+    onOpen: (Message) -> Unit = {},
+    onLongPress: (Message) -> Unit = {},
+    onDoubleTap: (Message) -> Unit = {},
+) {
+    LazyColumn(
+        state = listState,
+        modifier = modifier,
+        contentPadding = PaddingValues(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        reverseLayout = true,
+    ) {
+        items(messages.asReversed(), key = { it.id }) { message ->
+            if (message.deleted) {
+                DeletedPhoto(message)
+            } else {
+                PhotoBubble(
+                    message = message,
+                    url = photoUrl(message.photoId),
+                    onClick = { onOpen(message) },
+                    onLongClick = { onLongPress(message) },
+                    onDoubleClick = if (message.mine) null else ({ onDoubleTap(message) }),
+                )
+            }
+        }
+        // Ganz oben (wegen reverseLayout zuletzt): Hinweis auf die Grenze.
+        if (maxPhotos > 0) {
+            item(key = "limit") { PhotoLimitHint(maxPhotos) }
+        }
+    }
+}
+
 private data class ReportTarget(val messageId: String?)
+
+private const val HEART = "❤️"
+
+/** Dieselben Emojis wie auf dem Server. */
+internal val REACTIONS = listOf("❤️", "😂", "😮", "😢", "👍", "🔥")
+
+@Composable
+internal fun ReactionBadge(emoji: String, modifier: Modifier = Modifier) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surface,
+        shadowElevation = 2.dp,
+        modifier = modifier.padding(horizontal = 10.dp),
+    ) {
+        Text(emoji, fontSize = 18.sp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp))
+    }
+}
+
+@Composable
+internal fun ReactionPicker(current: String, onPick: (String) -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("React to this photo") },
+        text = {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                REACTIONS.forEach { emoji ->
+                    Box(
+                        Modifier
+                            .size(44.dp)
+                            .clip(RoundedCornerShape(50))
+                            .background(if (emoji == current) MaterialTheme.colorScheme.primaryContainer else Color.Transparent)
+                            .clickable { onPick(emoji) },
+                        contentAlignment = Alignment.Center,
+                    ) { Text(emoji, fontSize = 26.sp) }
+                }
+            }
+        },
+        confirmButton = {
+            if (current.isNotEmpty()) TextButton(onClick = { onPick(current) }) { Text("Remove reaction") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
+}
+
+@Composable
+internal fun ChatEnded(byMe: Boolean) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(if (byMe) "You ended this chat" else "The stranger ended this chat", style = MaterialTheme.typography.titleSmall)
+        Text(
+            "No more photos can be sent here. Take a new photo to meet someone else.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+    }
+}
 
 /** Platzhalter für ein gelöschtes Foto, auf der Seite der Person, die es geschickt hatte. */
 @Composable
@@ -311,30 +433,45 @@ private fun WaitingForReply() {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun PhotoBubble(message: Message, url: String, onClick: () -> Unit, onLongClick: () -> Unit) {
+internal fun PhotoBubble(
+    message: Message,
+    url: String,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    onDoubleClick: (() -> Unit)? = null,
+) {
     val mine = message.mine
     Column(
         Modifier.fillMaxWidth(),
         horizontalAlignment = if (mine) Alignment.End else Alignment.Start,
     ) {
-        AsyncImage(
-            model = url,
-            contentDescription = if (mine) "Your photo" else "Stranger's photo",
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .fillMaxWidth(0.8f)
-                .aspectRatio(3f / 4f)
-                .clip(RoundedCornerShape(16.dp))
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .combinedClickable(onClick = onClick, onLongClick = onLongClick),
-        )
+        Box(Modifier.fillMaxWidth(0.8f)) {
+            AsyncImage(
+                model = url,
+                contentDescription = if (mine) "Your photo" else "Stranger's photo",
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(3f / 4f)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .combinedClickable(onClick = onClick, onLongClick = onLongClick, onDoubleClick = onDoubleClick),
+            )
+            if (message.reaction.isNotEmpty()) {
+                ReactionBadge(
+                    message.reaction,
+                    Modifier.align(if (mine) Alignment.BottomStart else Alignment.BottomEnd).offset(y = 10.dp),
+                )
+            }
+        }
         Text(
             buildString {
                 append(if (mine) "You" else "Stranger")
+                if (!mine && message.country.isNotEmpty()) append(" · ").append(Countries.label(message.country))
                 append(" · ").append(DateUtils.getRelativeTimeSpanString(message.createdAt))
             },
             style = MaterialTheme.typography.labelSmall,
-            modifier = Modifier.padding(top = 4.dp, start = 4.dp, end = 4.dp),
+            modifier = Modifier.padding(top = if (message.reaction.isNotEmpty()) 14.dp else 4.dp, start = 4.dp, end = 4.dp),
         )
     }
 }

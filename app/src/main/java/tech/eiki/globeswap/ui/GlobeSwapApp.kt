@@ -42,14 +42,23 @@ import androidx.navigation.navArgument
 import tech.eiki.globeswap.ui.chat.ChatScreen
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.conversations.ConversationsViewModel
+import tech.eiki.globeswap.ui.onboarding.AgeGateScreen
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
+import tech.eiki.globeswap.ui.onboarding.TooYoungScreen
+import tech.eiki.globeswap.ui.settings.SettingsScreen
+import tech.eiki.globeswap.ui.world.WorldScreen
 import tech.eiki.globeswap.ui.swap.SwapScreen
 
 private const val ROUTE_SWAP = "swap"
 private const val ROUTE_CONVERSATIONS = "conversations"
 private const val ROUTE_CHAT = "chat/{conversationId}"
+private const val ROUTE_SETTINGS = "settings"
+private const val ROUTE_WORLD = "world"
 private const val PREFS = "globeswap"
 private const val KEY_ONBOARDED = "onboarded"
+private const val KEY_AGE = "age_check"
+private const val AGE_OK = "ok"
+private const val AGE_TOO_YOUNG = "too_young"
 
 @Composable
 fun GlobeSwapApp() {
@@ -73,6 +82,20 @@ fun GlobeSwapApp() {
             onCheckAgain = { scope.launch { updates.refresh() } },
         )
         return
+    }
+
+    // Altersabfrage vor allem anderen; gespeichert wird nur das Ergebnis.
+    var ageState by remember { mutableStateOf(prefs.getString(KEY_AGE, null)) }
+    when (ageState) {
+        AGE_TOO_YOUNG -> { TooYoungScreen(); return }
+        null -> {
+            AgeGateScreen(onResult = { ok ->
+                val result = if (ok) AGE_OK else AGE_TOO_YOUNG
+                prefs.edit().putString(KEY_AGE, result).apply()
+                ageState = result
+            })
+            return
+        }
     }
 
     if (!onboarded) {
@@ -136,6 +159,8 @@ fun GlobeSwapApp() {
                     conversations = conversations,
                     photoUrl = conversationsVm::photoUrl,
                     onOpen = { id -> nav.navigate("chat/$id") },
+                    onOpenWorld = { nav.navigate(ROUTE_WORLD) },
+                    onOpenSettings = { nav.navigate(ROUTE_SETTINGS) },
                     onDeleteAccount = {
                         conversationsVm.deleteAccount { error ->
                             if (error != null) {
@@ -154,6 +179,12 @@ fun GlobeSwapApp() {
                 arguments = listOf(navArgument("conversationId") { type = NavType.StringType }),
             ) {
                 ChatScreen(onBack = { nav.popBackStack() })
+            }
+            composable(ROUTE_SETTINGS) {
+                SettingsScreen(onBack = { nav.popBackStack() }, onOpenWorld = { nav.navigate(ROUTE_WORLD) })
+            }
+            composable(ROUTE_WORLD) {
+                WorldScreen(onBack = { nav.popBackStack() })
             }
         }
     }
