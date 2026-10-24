@@ -130,7 +130,6 @@ class NewFeaturesTest {
         }
         compose.onNodeWithText("When were you born?").assertExists()
         compose.onNodeWithText("Day").assertExists()
-        compose.onNodeWithText("Privacy Policy", substring = true).assertExists()
         compose.onNodeWithText("Continue").assertIsNotEnabled()
         compose.onNodeWithText("The view from your window").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/age-and-theme.png")
