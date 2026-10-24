@@ -9,6 +9,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -123,11 +124,14 @@ class NewFeaturesTest {
             GlobeSwapTheme {
                 Box(Modifier.padding(0.dp)) {
                     AgeGateScreen(onResult = {})
-                    DailyTheme("The view from your window", Modifier.padding(top = 600.dp))
+                    DailyTheme("The view from your window", Modifier.padding(top = 780.dp, start = 24.dp))
                 }
             }
         }
         compose.onNodeWithText("When were you born?").assertExists()
+        compose.onNodeWithText("Day").assertExists()
+        compose.onNodeWithText("Privacy Policy", substring = true).assertExists()
+        compose.onNodeWithText("Continue").assertIsNotEnabled()
         compose.onNodeWithText("The view from your window").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/age-and-theme.png")
     }

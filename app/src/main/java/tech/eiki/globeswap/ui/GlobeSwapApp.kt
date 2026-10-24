@@ -56,7 +56,10 @@ private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_WORLD = "world"
 private const val PREFS = "globeswap"
 private const val KEY_ONBOARDED = "onboarded"
-private const val KEY_AGE = "age_check"
+// Ergebnis der Altersabfrage samt Zustimmung zur Datenschutzerklärung. v1 (nur Monat/Jahr, ohne Zustimmung)
+// zählt nur noch, wenn sie "zu jung" ergab.
+private const val KEY_AGE = "age_check_v2"
+private const val KEY_AGE_V1 = "age_check"
 private const val AGE_OK = "ok"
 private const val AGE_TOO_YOUNG = "too_young"
 
@@ -85,7 +88,9 @@ fun GlobeSwapApp() {
     }
 
     // Altersabfrage vor allem anderen; gespeichert wird nur das Ergebnis.
-    var ageState by remember { mutableStateOf(prefs.getString(KEY_AGE, null)) }
+    var ageState by remember {
+        mutableStateOf(prefs.getString(KEY_AGE, null) ?: AGE_TOO_YOUNG.takeIf { prefs.getString(KEY_AGE_V1, null) == AGE_TOO_YOUNG })
+    }
     when (ageState) {
         AGE_TOO_YOUNG -> { TooYoungScreen(); return }
         null -> {

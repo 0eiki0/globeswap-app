@@ -5,7 +5,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import tech.eiki.globeswap.ui.onboarding.isOldEnough
-import java.time.YearMonth
+import java.time.LocalDate
 
 class CountriesTest {
     @Test
@@ -18,12 +18,12 @@ class CountriesTest {
     }
 
     @Test
-    fun ageCheckIsConservative() {
-        val now = YearMonth.of(2026, 10)
-        assertTrue(isOldEnough(YearMonth.of(2010, 9), now)) // 16 und einen Monat
-        assertFalse(isOldEnough(YearMonth.of(2010, 10), now)) // Geburtsmonat: Tag unbekannt → noch nicht
-        assertFalse(isOldEnough(YearMonth.of(2010, 11), now)) // 15
-        assertTrue(isOldEnough(YearMonth.of(1960, 1), now))
-        assertFalse(isOldEnough(YearMonth.of(2026, 1), now))
+    fun ageCheck() {
+        val today = LocalDate.of(2026, 10, 24)
+        assertTrue(isOldEnough(LocalDate.of(2010, 10, 24), today)) // heute 16. Geburtstag
+        assertFalse(isOldEnough(LocalDate.of(2010, 10, 25), today)) // morgen erst 16
+        assertTrue(isOldEnough(LocalDate.of(2010, 1, 1), today))
+        assertFalse(isOldEnough(LocalDate.of(2012, 2, 29), today))
+        assertTrue(isOldEnough(LocalDate.of(1960, 5, 5), today))
     }
 }

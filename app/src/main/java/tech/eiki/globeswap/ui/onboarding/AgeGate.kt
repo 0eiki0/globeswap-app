@@ -10,10 +10,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -31,9 +34,19 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.TextLinkStyles
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.withLink
+import tech.eiki.globeswap.ui.LegalLinks
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import java.time.LocalDate
 import java.time.Month
 import java.time.YearMonth
 import java.time.format.TextStyle
@@ -41,31 +54,31 @@ import java.util.Locale
 
 const val MIN_AGE = 16
 
-/**
- * Alt genug? Nur Monat und Jahr sind bekannt, deshalb zählt der Geburtsmonat selbst noch nicht:
- * wer im Juni 2010 geboren ist, ist ab Juli 2026 dabei.
- */
-fun isOldEnough(birth: YearMonth, now: YearMonth = YearMonth.now(), minAge: Int = MIN_AGE): Boolean {
-    val months = (now.year - birth.year) * 12 + (now.monthValue - birth.monthValue)
-    return months > minAge * 12
-}
+/** Alt genug? Am 16. Geburtstag selbst ist man dabei. */
+fun isOldEnough(birth: LocalDate, today: LocalDate = LocalDate.now(), minAge: Int = MIN_AGE): Boolean =
+    !birth.plusYears(minAge.toLong()).isAfter(today)
 
 /**
- * Neutrale Altersabfrage vor dem Start (Monat und Jahr, ohne Vorauswahl). Gespeichert wird nur das
- * Ergebnis auf dem Gerät, nicht das Geburtsdatum.
+ * Neutrale Altersabfrage vor dem Start (Tag, Monat und Jahr, ohne Vorauswahl) mit Zustimmung zur
+ * Datenschutzerklärung. Gespeichert wird nur das Ergebnis auf dem Gerät, nicht das Geburtsdatum.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AgeGateScreen(onResult: (oldEnough: Boolean) -> Unit) {
+    var day by rememberSaveable { mutableStateOf<Int?>(null) }
     var month by rememberSaveable { mutableStateOf<Int?>(null) }
     var year by rememberSaveable { mutableStateOf<Int?>(null) }
+    var privacyAccepted by rememberSaveable { mutableStateOf(false) }
     val thisYear = YearMonth.now().year
+    // Tage passend zu Monat und Jahr (29. Februar nur im Schaltjahr); ein ungültiger Tag wird verworfen.
+    val daysInMonth = month?.let { YearMonth.of(year ?: 2000, it).lengthOfMonth() } ?: 31
+    if ((day ?: 0) > daysInMonth) day = null
     Surface(Modifier.fillMaxSize()) {
         Column(
-            Modifier.fillMaxSize().safeDrawingPadding().padding(24.dp),
+            Modifier.fillMaxSize().safeDrawingPadding().verticalScroll(rememberScrollState()).padding(24.dp),
             verticalArrangement = Arrangement.Center,
         ) {
-            Icon(Icons.Default.Cake, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(56.dp))
+            Icon(Icons.Default.Cake, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
             Text("When were you born?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(
@@ -74,26 +87,53 @@ fun AgeGateScreen(onResult: (oldEnough: Boolean) -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Picker(
+                    label = "Day",
+                    value = day?.toString(),
+                    options = (1..daysInMonth).map { it to it.toString() },
+                    onPick = { day = it },
+                    modifier = Modifier.fillMaxWidth(),
+                )
                 Picker(
                     label = "Month",
                     value = month?.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
                     options = (1..12).map { it to Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
                     onPick = { month = it },
-                    modifier = Modifier.weight(1.3f),
+                    modifier = Modifier.fillMaxWidth(),
                 )
                 Picker(
                     label = "Year",
                     value = year?.toString(),
                     options = (thisYear downTo thisYear - 100).map { it to it.toString() },
                     onPick = { year = it },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(20.dp))
+            Row(
+                Modifier.fillMaxWidth().toggleable(value = privacyAccepted, role = Role.Checkbox, onValueChange = { privacyAccepted = it }),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Checkbox(checked = privacyAccepted, onCheckedChange = null)
+                Text(
+                    buildAnnotatedString {
+                        append("I have read and accept the ")
+                        withLink(
+                            LinkAnnotation.Url(
+                                LegalLinks.privacy,
+                                TextLinkStyles(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
+                            ),
+                        ) { append("Privacy Policy") }
+                        append(".")
+                    },
+                    modifier = Modifier.padding(start = 12.dp),
+                )
+            }
+            Spacer(Modifier.height(20.dp))
             Button(
-                onClick = { onResult(isOldEnough(YearMonth.of(year!!, month!!))) },
-                enabled = month != null && year != null,
+                onClick = { onResult(isOldEnough(LocalDate.of(year!!, month!!, day!!))) },
+                enabled = day != null && month != null && year != null && privacyAccepted,
                 modifier = Modifier.fillMaxWidth(),
             ) { Text("Continue") }
         }
