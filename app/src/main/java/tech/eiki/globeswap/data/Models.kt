@@ -20,6 +20,8 @@ data class Message(
     val mine: Boolean,
     val photoId: String,
     val createdAt: Long,
+    /** Das Foto wurde gelöscht – an seiner Stelle steht nur ein Hinweis. */
+    val deleted: Boolean = false,
 )
 
 @Serializable

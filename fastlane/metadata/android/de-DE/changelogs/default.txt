@@ -2,3 +2,4 @@
 • Im Chat wird abwechselnd geantwortet, und nur die neuesten 10 Fotos bleiben
 • Hinweis, wenn eine neue Version erschienen ist
 • Mehr Privatsphäre: Fotos lassen sich nicht speichern, Screenshots und Bildschirmaufnahmen sind gesperrt
+• Gelöschte Fotos zeigen im Chat einen Hinweis

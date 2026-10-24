@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.HideImage
 import androidx.compose.material.icons.filled.Flag
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
@@ -59,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
@@ -179,6 +181,10 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                 item(key = "limit") { PhotoLimitHint(maxPhotos) }
             }
             items(messages, key = { it.id }) { message ->
+                if (message.deleted) {
+                    DeletedPhoto(message)
+                    return@items
+                }
                 PhotoBubble(
                     message = message,
                     url = vm.photoUrl(message.photoId),
@@ -247,6 +253,37 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
 }
 
 private data class ReportTarget(val messageId: String?)
+
+/** Platzhalter für ein gelöschtes Foto, auf der Seite der Person, die es geschickt hatte. */
+@Composable
+internal fun DeletedPhoto(message: Message) {
+    Row(
+        Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+        horizontalArrangement = if (message.mine) Arrangement.End else Arrangement.Start,
+    ) {
+        Row(
+            Modifier
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(
+                Icons.Default.HideImage,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(16.dp),
+            )
+            Text(
+                if (message.mine) "You deleted a photo" else "The stranger deleted a photo",
+                style = MaterialTheme.typography.labelMedium,
+                fontStyle = FontStyle.Italic,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 6.dp),
+            )
+        }
+    }
+}
 
 /** Nur die neuesten Fotos bleiben – ältere verschwinden bei beiden. */
 @Composable

@@ -21,6 +21,8 @@ import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.InstallChannel
 import tech.eiki.globeswap.data.LatestRelease
+import tech.eiki.globeswap.data.Message
+import tech.eiki.globeswap.ui.chat.DeletedPhoto
 import tech.eiki.globeswap.ui.chat.PhotoLimitHint
 import tech.eiki.globeswap.ui.conversations.AboutDialog
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
@@ -60,6 +62,21 @@ class ScreensTest {
     fun photoLimitHint() {
         compose.setContent { GlobeSwapTheme { PhotoLimitHint(10) } }
         compose.onNodeWithText("Only the latest 10 photos are kept – older ones disappear for both of you.").assertExists()
+    }
+
+    @Test
+    fun deletedPhotoPlaceholders() {
+        compose.setContent {
+            GlobeSwapTheme {
+                androidx.compose.foundation.layout.Column {
+                    DeletedPhoto(Message("m1", mine = false, photoId = "", createdAt = 0, deleted = true))
+                    DeletedPhoto(Message("m2", mine = true, photoId = "", createdAt = 0, deleted = true))
+                }
+            }
+        }
+        compose.onNodeWithText("The stranger deleted a photo").assertExists()
+        compose.onNodeWithText("You deleted a photo").assertExists()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/deleted-photo.png")
     }
 
     @Test

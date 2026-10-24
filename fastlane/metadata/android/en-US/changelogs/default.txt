@@ -2,3 +2,4 @@
 • Chats take turns, and only the latest 10 photos are kept
 • Notice when a new version is available
 • More privacy: photos can't be saved, screenshots and screen recordings are blocked
+• Deleted photos leave a note in the chat
