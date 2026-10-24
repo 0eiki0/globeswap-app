@@ -4,3 +4,4 @@
 • React to photos, end chats, delete chats and your own photos
 • Chats take turns, the latest 10 photos are kept
 • Instant notifications, update notice, age check
+• Installed from GitHub: the app now updates itself

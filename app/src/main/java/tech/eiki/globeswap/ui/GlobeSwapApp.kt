@@ -75,14 +75,19 @@ fun GlobeSwapApp() {
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
     LaunchedEffect(lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { updates.refresh() }
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            updates.refresh()
+            updates.resumeSelfUpdate() // zurück aus den Einstellungen "Apps installieren"
+        }
     }
+    val selfUpdate by updates.selfUpdater.state.collectAsStateWithLifecycle()
     if (update.required) {
         ForcedUpdateScreen(
             message = update.message,
             installedVersion = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
             onUpdate = { updates.openUpdate(context) },
             onCheckAgain = { scope.launch { updates.refresh() } },
+            selfUpdate = selfUpdate,
         )
         return
     }
@@ -128,6 +133,7 @@ fun GlobeSwapApp() {
                         channel = updates.channel,
                         onUpdate = { updates.openUpdate(context) },
                         onLater = { updates.dismiss(release.versionCode) },
+                        selfUpdate = selfUpdate,
                     )
                 }
                 NavigationBar {

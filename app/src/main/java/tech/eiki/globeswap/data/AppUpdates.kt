@@ -9,7 +9,9 @@ import android.util.Log
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
+import tech.eiki.globeswap.update.SelfUpdater
 
 /** Woher die App installiert wurde – bestimmt, wohin der Update-Knopf führt. */
 enum class InstallChannel(val header: String) {
@@ -44,7 +46,15 @@ enum class InstallChannel(val header: String) {
 }
 
 @Serializable
-data class LatestRelease(val versionCode: Int, val versionName: String, val url: String = "")
+data class LatestRelease(
+    val versionCode: Int,
+    val versionName: String,
+    val url: String = "",
+    /** Geprüfte APK auf unserem Server (Pfad, z. B. "/app/GlobeSwap.apk") – für das Selbst-Update. */
+    val apkUrl: String = "",
+    val apkSha256: String = "",
+    val apkSize: Long = 0,
+)
 
 @Serializable
 data class UpdateConfig(
@@ -83,6 +93,8 @@ class AppUpdates(
     private val api: ApiClient,
     private val currentCode: Int,
     val channel: InstallChannel,
+    /** Selbst-Update der GitHub-Variante (lädt und installiert die neue APK). */
+    val selfUpdater: SelfUpdater = SelfUpdater(context.applicationContext, api.httpClient, { api.pageUrl(it.removePrefix("/")) }, currentCode),
 ) {
     private val prefs = context.getSharedPreferences("globeswap_updates", Context.MODE_PRIVATE)
     private val _state = MutableStateFlow(UpdateUi())
@@ -112,14 +124,32 @@ class AppUpdates(
         _state.value = _state.value.copy(available = null)
     }
 
-    /** Öffnet die passende Quelle für das Update. */
+    private val newest: LatestRelease? get() = _state.value.available ?: lastConfig?.latest
+
+    /** Kann sich diese Installation gleich selbst aktualisieren (statt auf GitHub zu verweisen)? */
+    val canSelfUpdate: Boolean get() = selfUpdater.canSelfUpdate(newest, channel)
+
+    /** Nach der Rückkehr in die App (z. B. aus den Einstellungen) ein angefangenes Selbst-Update fortsetzen. */
+    suspend fun resumeSelfUpdate() = selfUpdater.resumeIfAllowed(newest?.takeIf { canSelfUpdate })
+
+    /** Update starten: selbst installieren, wenn möglich, sonst die passende Quelle öffnen. */
     fun openUpdate(context: Context) {
+        val release = newest
+        if (release != null && selfUpdater.canSelfUpdate(release, channel)) {
+            ServiceLocator.appScope.launch { selfUpdater.start(release) }
+            return
+        }
+        openStore(context)
+    }
+
+    /** Öffnet die passende Quelle für das Update. */
+    fun openStore(context: Context) {
         val pkg = context.packageName
         val candidates = when (channel) {
             InstallChannel.PLAY -> listOf("market://details?id=$pkg", "https://play.google.com/store/apps/details?id=$pkg")
             InstallChannel.FDROID -> listOf("market://details?id=$pkg", "https://apt.izzysoft.de/fdroid/index/apk/$pkg")
             InstallChannel.GITHUB -> listOfNotNull(
-                (_state.value.available ?: lastConfig?.latest)?.url?.takeIf { it.isNotBlank() },
+                newest?.url?.takeIf { it.isNotBlank() },
                 RELEASES_URL,
             )
         }

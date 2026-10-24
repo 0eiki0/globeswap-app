@@ -67,6 +67,9 @@ class ApiClient(
         .pingInterval(25, TimeUnit.SECONDS)
         .build()
 
+    /** Für Downloads ohne Anmeldung (z. B. das Selbst-Update); schickt die App-Version mit. */
+    val httpClient: OkHttpClient get() = http
+
     /** Für Coil: hängt das Token an jede Bildanfrage, Fotos sind nur für Beteiligte sichtbar. */
     val imageClient: OkHttpClient = http.newBuilder()
         .addInterceptor { chain ->

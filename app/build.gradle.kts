@@ -48,6 +48,21 @@ android {
         }
     }
 
+    // Zwei Varianten aus demselben Code: "github" (APK für GitHub/IzzyOnDroid/itch.io, kann sich selbst
+    // aktualisieren) und "play" (App-Bundle für Google Play, ohne Installations-Berechtigung – Updates kommen
+    // dort vom Play Store). Sie unterscheiden sich nur in src/github/AndroidManifest.xml und SELF_UPDATE.
+    flavorDimensions += "store"
+    productFlavors {
+        create("github") {
+            dimension = "store"
+            buildConfigField("boolean", "SELF_UPDATE", "true")
+        }
+        create("play") {
+            dimension = "store"
+            buildConfigField("boolean", "SELF_UPDATE", "false")
+        }
+    }
+
     buildTypes {
         release {
             // R8 entfernt ungenutzten Code und Ressourcen (v. a. ungenutzte Icons) – die APK wird deutlich kleiner.

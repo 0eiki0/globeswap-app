@@ -47,9 +47,10 @@ globeswap.serverUrl=https://swap.eiki.tech
 ```
 
 ```bash
-./gradlew assembleDebug        # Test-APK: app/build/outputs/apk/debug/
-./gradlew testDebugUnitTest    # Tests ohne Gerät (Robolectric), Screenshots in app/build/outputs/roborazzi/
-./gradlew bundleRelease        # App-Bundle für den Play Store
+./gradlew assembleGithubDebug  # Test-APK: app/build/outputs/apk/github/debug/
+./gradlew testGithubDebugUnitTest  # Tests ohne Gerät (Robolectric), Screenshots in app/build/outputs/roborazzi/
+./gradlew bundlePlayRelease    # App-Bundle für den Play Store (ohne Selbst-Update)
+./gradlew assembleGithubRelease  # APK für GitHub & Co. (mit Selbst-Update)
 ```
 
 Lokal mit eigenem Testserver (`go run .` im Server-Repository) im Emulator:
@@ -107,6 +108,22 @@ Signierte Release-APK und App-Bundle (`globeswap-release`) entstehen zusätzlich
 | `SIGNING_KEYSTORE_BASE64` | der Signaturschlüssel als Base64: `base64 -w0 photoswap-release.jks` |
 | `SIGNING_PASSWORD` | das Passwort aus `keystore.properties` (Store- und Key-Passwort sind gleich) |
 | `GOOGLE_SERVICES_JSON` | optional, für Push: der komplette Inhalt der `google-services.json` aus der Firebase-Konsole |
+
+## Zwei Varianten: GitHub und Google Play
+
+Aus demselben Code entstehen zwei Builds (Gradle-Flavors), die sich nur in `app/src/github/AndroidManifest.xml`
+und `BuildConfig.SELF_UPDATE` unterscheiden:
+
+| Variante | Datei | Für | Updates |
+|---|---|---|---|
+| `github` | `GlobeSwap-<Version>.apk` (GitHub-Release) | GitHub, IzzyOnDroid, itch.io | aktualisiert sich selbst |
+| `play` | `GlobeSwap-<Version>-play.aab` (Artefakt des Release-Laufs) | Google Play | über den Play Store |
+
+Selbst-Update: Der Server holt die APK des neuesten Releases bei GitHub, prüft sie gegen die Prüfsumme in den
+Release-Notizen und bietet sie unter `/app/GlobeSwap.apk` an. Die App lädt sie dort, prüft Prüfsumme, Paketname,
+Version und Signatur und übergibt sie dem Android-Installer. Beim ersten Mal muss man GlobeSwap erlauben, Apps zu
+installieren; ab Android 12 laufen spätere Updates ohne Nachfrage. Die Build-Pipeline bricht ab, falls die
+Installations-Berechtigung je im App-Bundle für Google Play landen sollte.
 
 ## Push-Mitteilungen
 

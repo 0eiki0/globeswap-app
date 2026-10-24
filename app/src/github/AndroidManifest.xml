@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Nur in der GitHub-Variante (APK): die App darf ihr eigenes Update installieren. Die Play-Variante (AAB)
+     bekommt diese Berechtigungen nicht – Google Play erlaubt sie nicht, dort aktualisiert der Play Store. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!-- Ab Android 12: spätere Updates ohne Nachfrage, wenn GlobeSwap sich schon einmal selbst installiert hat. -->
+    <uses-permission android:name="android.permission.UPDATE_PACKAGES_WITHOUT_USER_ACTION" />
+
+    <application>
+        <receiver
+            android:name=".update.InstallResultReceiver"
+            android:exported="false" />
+    </application>
+</manifest>

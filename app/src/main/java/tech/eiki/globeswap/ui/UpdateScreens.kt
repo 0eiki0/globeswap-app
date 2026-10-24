@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -26,10 +27,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import tech.eiki.globeswap.data.InstallChannel
 import tech.eiki.globeswap.data.LatestRelease
+import tech.eiki.globeswap.update.SelfUpdateState
+import kotlin.math.roundToInt
 
 /** Diese Version ist zu alt – die App ist gesperrt, bis sie aktualisiert ist. */
 @Composable
-fun ForcedUpdateScreen(message: String, installedVersion: String, onUpdate: () -> Unit, onCheckAgain: () -> Unit) {
+fun ForcedUpdateScreen(
+    message: String,
+    installedVersion: String,
+    onUpdate: () -> Unit,
+    onCheckAgain: () -> Unit,
+    selfUpdate: SelfUpdateState = SelfUpdateState.Idle,
+) {
     Surface(Modifier.fillMaxSize()) {
         Column(
             Modifier.fillMaxSize().safeDrawingPadding().padding(32.dp),
@@ -46,7 +55,10 @@ fun ForcedUpdateScreen(message: String, installedVersion: String, onUpdate: () -
                 textAlign = TextAlign.Center,
             )
             Spacer(Modifier.height(32.dp))
-            Button(onClick = onUpdate, modifier = Modifier.fillMaxWidth()) { Text("Update now") }
+            Button(onClick = onUpdate, enabled = !selfUpdate.busy, modifier = Modifier.fillMaxWidth()) {
+                Text(if (selfUpdate is SelfUpdateState.Failed) "Try again" else "Update now")
+            }
+            SelfUpdateProgress(selfUpdate, Modifier.padding(top = 12.dp))
             TextButton(onClick = onCheckAgain) { Text("Check again") }
             Spacer(Modifier.height(16.dp))
             Text(
@@ -60,8 +72,15 @@ fun ForcedUpdateScreen(message: String, installedVersion: String, onUpdate: () -
 
 /** Hinweis auf eine neue Version, über der unteren Navigationsleiste. */
 @Composable
-fun UpdateBanner(release: LatestRelease, channel: InstallChannel, onUpdate: () -> Unit, onLater: () -> Unit) {
+fun UpdateBanner(
+    release: LatestRelease,
+    channel: InstallChannel,
+    onUpdate: () -> Unit,
+    onLater: () -> Unit,
+    selfUpdate: SelfUpdateState = SelfUpdateState.Idle,
+) {
     Surface(color = MaterialTheme.colorScheme.primaryContainer, contentColor = MaterialTheme.colorScheme.onPrimaryContainer) {
+      Column {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -76,8 +95,43 @@ fun UpdateBanner(release: LatestRelease, channel: InstallChannel, onUpdate: () -
                     )
                 }
             }
-            TextButton(onClick = onLater) { Text("Later") }
-            Button(onClick = onUpdate) { Text("Update") }
+            TextButton(onClick = onLater, enabled = !selfUpdate.busy) { Text("Later") }
+            Button(onClick = onUpdate, enabled = !selfUpdate.busy) {
+                Text(if (selfUpdate is SelfUpdateState.Failed) "Retry" else "Update")
+            }
         }
+        SelfUpdateProgress(selfUpdate, Modifier.padding(start = 16.dp, end = 16.dp, bottom = 10.dp))
+      }
+    }
+}
+
+private val SelfUpdateState.busy get() = this is SelfUpdateState.Downloading || this == SelfUpdateState.Installing
+
+/** Fortschritt des Selbst-Updates (nur in der GitHub-Variante zu sehen). */
+@Composable
+fun SelfUpdateProgress(state: SelfUpdateState, modifier: Modifier = Modifier) {
+    when (state) {
+        SelfUpdateState.Idle -> Unit
+        is SelfUpdateState.Downloading -> Column(modifier.fillMaxWidth()) {
+            LinearProgressIndicator(progress = { state.progress }, modifier = Modifier.fillMaxWidth())
+            Text("Downloading update… ${(state.progress * 100).roundToInt()} %", style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp))
+        }
+        SelfUpdateState.Installing -> Column(modifier.fillMaxWidth()) {
+            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+            Text("Installing… tap “Update” if Android asks.", style = MaterialTheme.typography.bodySmall,
+                modifier = Modifier.padding(top = 4.dp))
+        }
+        SelfUpdateState.NeedsPermission -> Text(
+            "Allow GlobeSwap to install updates in the settings that just opened, then come back here.",
+            style = MaterialTheme.typography.bodySmall,
+            modifier = modifier,
+        )
+        is SelfUpdateState.Failed -> Text(
+            state.message,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.error,
+            modifier = modifier,
+        )
     }
 }

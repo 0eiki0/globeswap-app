@@ -85,19 +85,19 @@ jobs:
           fi
 
       - name: Tests
-        run: ./gradlew testDebugUnitTest --stacktrace
+        run: ./gradlew testGithubDebugUnitTest --stacktrace
 
       - name: Lint
-        run: ./gradlew lintRelease
+        run: ./gradlew lintGithubRelease lintPlayRelease
 
       - name: Debug-APK bauen
-        run: ./gradlew assembleDebug
+        run: ./gradlew assembleGithubDebug
 
       - name: Debug-APK hochladen
         uses: actions/upload-artifact@v7
         with:
           name: globeswap-debug-apk
-          path: app/build/outputs/apk/debug/*.apk
+          path: app/build/outputs/apk/github/debug/*.apk
           retention-days: 14
 
       - name: Testberichte und Screenshots hochladen
@@ -107,7 +107,7 @@ jobs:
           name: test-reports
           path: |
             app/build/reports/tests/
-            app/build/reports/lint-results-release.html
+            app/build/reports/lint-results-*.html
             app/build/outputs/roborazzi/
             app/build/outputs/store-raw/
           retention-days: 14
@@ -126,9 +126,28 @@ jobs:
           keyPassword=$SIGNING_PASSWORD
           PROPS
 
+      # APK aus der Variante "github" (mit Selbst-Update), App-Bundle aus "play" (ohne Installations-Berechtigung).
       - name: Release bauen (APK + App-Bundle)
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
-        run: ./gradlew assembleRelease bundleRelease
+        run: |
+          ./gradlew assembleGithubRelease bundlePlayRelease
+          mkdir -p release
+          cp app/build/outputs/apk/github/release/app-github-release.apk "release/GlobeSwap-${{ steps.version.outputs.name }}.apk"
+          cp app/build/outputs/bundle/playRelease/app-play-release.aab "release/GlobeSwap-${{ steps.version.outputs.name }}-play.aab"
+
+      # Sicherheitsnetz: Die Berechtigung "Apps installieren" darf nur in der APK stecken, nie im App-Bundle für
+      # Google Play (sonst lehnt Google es ab). Stimmt das nicht, schlägt der Build fehl.
+      - name: Berechtigungen prüfen
+        if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
+        run: |
+          aapt2="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/aapt2"
+          if ! "$aapt2" dump permissions release/GlobeSwap-*.apk | grep -q REQUEST_INSTALL_PACKAGES; then
+            echo "::error::Die APK für GitHub kann sich nicht selbst aktualisieren (Berechtigung fehlt)"; exit 1
+          fi
+          if unzip -p release/*-play.aab base/manifest/AndroidManifest.xml | grep -a -q -e REQUEST_INSTALL_PACKAGES -e UPDATE_PACKAGES_WITHOUT_USER_ACTION; then
+            echo "::error::Das App-Bundle für Google Play enthält die Berechtigung zum Installieren von Apps"; exit 1
+          fi
+          echo "::notice::APK mit Selbst-Update, App-Bundle für Google Play ohne Installations-Berechtigung – passt."
 
       # Öffentlicher Fingerabdruck des Zertifikats: zeigt, mit welchem Schlüssel signiert wurde
       # (muss zum Upload-Schlüssel in der Play Console passen). Enthält nichts Geheimes.
@@ -136,17 +155,16 @@ jobs:
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
         run: |
           apksigner="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
-          fp=$("$apksigner" verify --print-certs app/build/outputs/apk/release/*.apk | sed -n 's/.*SHA-256 digest: //p' | head -1)
+          fp=$("$apksigner" verify --print-certs release/GlobeSwap-*.apk | sed -n 's/.*SHA-256 digest: //p' | head -1)
           echo "::notice title=Signatur-Zertifikat (SHA-256)::$fp"
           echo "Zertifikat SHA-256: \`$fp\`" >> "$GITHUB_STEP_SUMMARY"
-          echo "$fp" > app/build/outputs/apk/release/certificate-sha256.txt
+          echo "$fp" > release/certificate-sha256.txt
 
       - name: APK für Downloads benennen
         id: signed
         if: env.SIGNING_KEYSTORE_BASE64 != '' && env.SIGNING_PASSWORD != ''
         run: |
-          cd app/build/outputs/apk/release
-          cp app-release.apk "GlobeSwap-${{ steps.version.outputs.name }}.apk"
+          cd release
           sha256sum "GlobeSwap-${{ steps.version.outputs.name }}.apk" > SHA256SUMS.txt
           echo "signed=true" >> "$GITHUB_OUTPUT"
 
@@ -155,15 +173,12 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: globeswap-release-${{ steps.version.outputs.name }}-${{ env.GLOBESWAP_VERSION_CODE }}
-          path: |
-            app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/release/*.txt
-            app/build/outputs/bundle/release/*.aab
+          path: release/
           retention-days: 30
 
       - name: Signaturschlüssel entfernen
         if: always()
-        run: rm -rf signing
+        run: rm -rf signing release
 
       - name: Hinweis ohne Signaturschlüssel
         if: env.SIGNING_KEYSTORE_BASE64 == '' || env.SIGNING_PASSWORD == ''
@@ -186,8 +201,8 @@ jobs:
 
       - name: Release-Text
         run: |
-          cert=$(cat dist/apk/release/certificate-sha256.txt)
-          sum=$(cut -d' ' -f1 dist/apk/release/SHA256SUMS.txt)
+          cert=$(cat dist/certificate-sha256.txt)
+          sum=$(cut -d' ' -f1 dist/SHA256SUMS.txt)
           cat > notes.md <<NOTES
           ## GlobeSwap ${{ needs.build.outputs.version }}
 
@@ -213,5 +228,5 @@ jobs:
           name: GlobeSwap ${{ needs.build.outputs.version }}
           body_path: notes.md
           files: |
-            dist/apk/release/GlobeSwap-*.apk
-            dist/apk/release/SHA256SUMS.txt
+            dist/GlobeSwap-*.apk
+            dist/SHA256SUMS.txt

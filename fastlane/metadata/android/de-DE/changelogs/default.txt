@@ -4,3 +4,4 @@
 • Reaktionen auf Fotos, Chats beenden, Chats und eigene Fotos löschen
 • Antworten im Wechsel, die neuesten 10 Fotos bleiben
 • Sofortige Benachrichtigungen, Update-Hinweis, Altersabfrage
+• Download von GitHub: die App aktualisiert sich jetzt selbst

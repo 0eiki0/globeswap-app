@@ -80,6 +80,20 @@ class ScreensTest {
     }
 
     @Test
+    fun updateBannerDownloading() {
+        compose.setContent {
+            GlobeSwapTheme {
+                UpdateBanner(
+                    LatestRelease(130, "2.3"), InstallChannel.GITHUB, onUpdate = {}, onLater = {},
+                    selfUpdate = tech.eiki.globeswap.update.SelfUpdateState.Downloading(0.45f),
+                )
+            }
+        }
+        compose.onNodeWithText("Downloading update… 45 %").assertExists()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/update-downloading.png")
+    }
+
+    @Test
     fun onboarding() {
         compose.setContent { GlobeSwapTheme { OnboardingScreen(onAccept = {}) } }
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/onboarding.png")
