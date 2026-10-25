@@ -5,3 +5,4 @@
 • Antworten im Wechsel, die neuesten 10 Fotos bleiben
 • Sofortige Benachrichtigungen, Update-Hinweis, Altersabfrage
 • Download von GitHub: die App aktualisiert sich jetzt selbst
+• Kamera: Zoomen mit zwei Fingern, Zoom-Knöpfe, Weitwinkel und Antippen zum Scharfstellen

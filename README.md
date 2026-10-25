@@ -14,7 +14,8 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
 
 ## Funktionen
 
-* Foto aufnehmen (Front-/Rückkamera, Blitz) und mit einer fremden Person tauschen
+* Foto aufnehmen (Front-/Rückkamera, Blitz, Zoom mit zwei Fingern und Zoom-Knöpfen inkl. Weitwinkel, Antippen zum
+  Scharfstellen) und mit einer fremden Person tauschen
 * Vor dem Senden bearbeiten wie bei Snapchat: Text, Zeichnen, Emoji-Sticker, Filter;
   Sticker per Anfasser oder mit zwei Fingern drehen und skalieren
 * Unterhaltungen nur aus Fotos, immer im Wechsel (erst antworten, wenn das Gegenüber ein Foto geschickt hat) – es bleiben nur die neuesten 10 Fotos (einstellbar am Server), live per WebSocket, Liste mit Badge für neue Fotos

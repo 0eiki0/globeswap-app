@@ -7,7 +7,9 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.FocusMeteringAction
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
@@ -19,6 +21,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,6 +54,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,11 +63,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -69,8 +78,10 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import tech.eiki.globeswap.ui.editor.PhotoEditor
 import tech.eiki.globeswap.util.ImageUtils
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 /**
  * Vollbild-Kamera, danach der Editor (Text, Zeichnen, Sticker, Filter). [onConfirm] erhält das fertige JPEG.
@@ -125,6 +136,14 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
     var flashOn by rememberSaveable { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
     var provider by remember { mutableStateOf<ProcessCameraProvider?>(null) }
+    var camera by remember { mutableStateOf<Camera?>(null) }
+    // Zoom: aktueller Wert und Bereich der Kamera; Weitwinkel als eigene Kamera, falls das Handy sie so meldet.
+    var zoomRatio by remember { mutableFloatStateOf(1f) }
+    var zoomRange by remember { mutableStateOf(1f to 1f) }
+    var useWide by rememberSaveable { mutableStateOf(false) }
+    var wideSelector by remember { mutableStateOf<CameraSelector?>(null) }
+    var pendingZoom by remember { mutableStateOf<Float?>(null) }
+    var focusPoint by remember { mutableStateOf<Offset?>(null) }
 
     val previewView = remember {
         PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER }
@@ -135,19 +154,51 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
 
     LaunchedEffect(Unit) { provider = ProcessCameraProvider.awaitInstance(context) }
 
-    DisposableEffect(provider, lensFacing, lifecycleOwner) {
+    DisposableEffect(provider, lensFacing, useWide, lifecycleOwner) {
         val cameraProvider = provider
+        var bound: Camera? = null
         if (cameraProvider != null) {
             val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
-            val selector = CameraSelector.Builder().requireLensFacing(lensFacing).build()
+            val wide = wideSelector.takeIf { useWide && lensFacing == CameraSelector.LENS_FACING_BACK }
+            val selector = wide ?: CameraSelector.Builder().requireLensFacing(lensFacing).build()
             try {
                 cameraProvider.unbindAll()
-                cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
+                bound = cameraProvider.bindToLifecycle(lifecycleOwner, selector, preview, imageCapture)
+                camera = bound
+                bound.cameraInfo.zoomState.observe(lifecycleOwner) { state ->
+                    zoomRatio = state.zoomRatio
+                    if (wide == null) zoomRange = state.minZoomRatio to state.maxZoomRatio
+                }
+                if (wide == null && lensFacing == CameraSelector.LENS_FACING_BACK && bound.cameraInfo.zoomState.value?.minZoomRatio?.let { it >= 0.95f } != false) {
+                    wideSelector = wideCameraSelector(cameraProvider.availableCameraInfos, bound.cameraInfo)
+                }
+                pendingZoom?.let { bound.cameraControl.setZoomRatio(it); pendingZoom = null }
             } catch (e: Exception) {
                 Log.e("PhotoCapture", "Kamera konnte nicht gestartet werden", e)
             }
         }
-        onDispose { cameraProvider?.unbindAll() }
+        onDispose {
+            bound?.cameraInfo?.zoomState?.removeObservers(lifecycleOwner)
+            cameraProvider?.unbindAll()
+        }
+    }
+
+    val separateWide = wideSelector != null && lensFacing == CameraSelector.LENS_FACING_BACK
+    val presets = zoomPresets(zoomRange.first, zoomRange.second, separateWide)
+    val shownZoom = if (useWide) WIDE * zoomRatio else zoomRatio
+    fun selectZoom(preset: Float) {
+        when {
+            separateWide && preset == WIDE -> useWide = true
+            useWide -> { pendingZoom = preset; useWide = false }
+            else -> camera?.cameraControl?.setZoomRatio(preset)
+        }
+    }
+
+    LaunchedEffect(focusPoint) {
+        if (focusPoint != null) {
+            delay(900)
+            focusPoint = null
+        }
     }
 
     LaunchedEffect(flashOn) {
@@ -181,6 +232,36 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
 
     Box(Modifier.fillMaxSize()) {
         AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+        // Zwei Finger: zoomen. Antippen: dort scharfstellen.
+        Box(
+            Modifier
+                .fillMaxSize()
+                .pointerInput(camera) {
+                    detectTransformGestures { _, _, zoom, _ ->
+                        val cam = camera ?: return@detectTransformGestures
+                        if (zoom != 1f) {
+                            val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
+                            cam.cameraControl.setZoomRatio((state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio))
+                        }
+                    }
+                }
+                .pointerInput(camera) {
+                    detectTapGestures { offset ->
+                        val cam = camera ?: return@detectTapGestures
+                        val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
+                        cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
+                        focusPoint = offset
+                    }
+                },
+        )
+        focusPoint?.let { p ->
+            Box(
+                Modifier
+                    .offset { IntOffset(p.x.roundToInt() - 32.dp.roundToPx(), p.y.roundToInt() - 32.dp.roundToPx()) }
+                    .size(64.dp)
+                    .border(2.dp, Color.White, CircleShape),
+            )
+        }
 
         Row(
             Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp),
@@ -215,6 +296,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
                         .padding(horizontal = 12.dp, vertical = 8.dp),
                 )
             }
+            ZoomChips(presets, shownZoom, onSelect = ::selectZoom, modifier = Modifier.padding(bottom = 16.dp))
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly,
@@ -233,6 +315,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
                     if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.Black)
                 }
                 IconButton(onClick = {
+                    useWide = false
                     lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
                         CameraSelector.LENS_FACING_FRONT
                     } else {

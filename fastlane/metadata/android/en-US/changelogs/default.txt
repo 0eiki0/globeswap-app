@@ -5,3 +5,4 @@
 • Chats take turns, the latest 10 photos are kept
 • Instant notifications, update notice, age check
 • Installed from GitHub: the app now updates itself
+• Camera: pinch to zoom, zoom buttons, ultra-wide and tap to focus
