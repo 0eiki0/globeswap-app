@@ -111,7 +111,7 @@ private enum class Tool { NONE, DRAW, FILTER }
 private const val TRASH_ZONE = 0.86f
 
 /**
- * Bearbeiten vor dem Senden, ähnlich wie bei Snapchat: Text, Zeichnen, Emoji-Sticker und Filter.
+ * Bearbeiten vor dem Senden: Text, Zeichnen, Emoji-Sticker und Filter.
  * [onConfirm] bekommt das fertig gerenderte JPEG.
  */
 @OptIn(ExperimentalMaterial3Api::class)
