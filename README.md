@@ -127,6 +127,13 @@ Version und Signatur und übergibt sie dem Android-Installer. Beim ersten Mal mu
 installieren; ab Android 12 laufen spätere Updates ohne Nachfrage. Die Build-Pipeline bricht ab, falls die
 Installations-Berechtigung je im App-Bundle für Google Play landen sollte.
 
+## Changelog in der App
+
+`app/src/main/assets/changelog.md` (Englisch, wie die App) ist die Quelle für „What's new“ (Chats → ⋮) und den
+Hinweis, der nach einem Update einmal erscheint. Neue Änderungen kommen als `- …`-Zeilen unter `## Next`. Beim
+Release-Lauf benennt GitHub Actions `## Next` in `## <Version> (<Datum>)` um, legt ein neues leeres `## Next` an,
+committet das auf `main` und übernimmt die Punkte als „What's new“ in die Release-Notizen.
+
 ## Push-Mitteilungen
 
 Die App nutzt Firebase Cloud Messaging, ohne das Google-Services-Gradle-Plugin: `app/build.gradle.kts` liest

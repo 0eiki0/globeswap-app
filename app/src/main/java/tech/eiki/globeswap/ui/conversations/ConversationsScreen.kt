@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.Public
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
@@ -58,6 +59,7 @@ fun ConversationsScreen(
     onAboutOpened: () -> Unit = {},
     onOpenWorld: () -> Unit = {},
     onOpenSettings: () -> Unit = {},
+    onOpenChangelog: () -> Unit = {},
 ) {
     var showAbout by remember { mutableStateOf(false) }
     if (showAbout) AboutDialog(publicId, onDismiss = { showAbout = false })
@@ -76,6 +78,11 @@ fun ConversationsScreen(
                             text = { Text("Settings") },
                             leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
                             onClick = { menuOpen = false; onOpenSettings() },
+                        )
+                        DropdownMenuItem(
+                            text = { Text("What's new") },
+                            leadingIcon = { Icon(Icons.Default.NewReleases, contentDescription = null) },
+                            onClick = { menuOpen = false; onOpenChangelog() },
                         )
                         DropdownMenuItem(
                             text = { Text("About & privacy") },

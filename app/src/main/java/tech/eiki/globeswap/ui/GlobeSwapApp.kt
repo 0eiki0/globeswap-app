@@ -42,6 +42,9 @@ import androidx.navigation.navArgument
 import tech.eiki.globeswap.ui.chat.ChatScreen
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.conversations.ConversationsViewModel
+import tech.eiki.globeswap.ui.changelog.Changelog
+import tech.eiki.globeswap.ui.changelog.ChangelogScreen
+import tech.eiki.globeswap.ui.changelog.WhatsNewDialog
 import tech.eiki.globeswap.ui.onboarding.AgeGateScreen
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
 import tech.eiki.globeswap.ui.onboarding.TooYoungScreen
@@ -54,6 +57,8 @@ private const val ROUTE_CONVERSATIONS = "conversations"
 private const val ROUTE_CHAT = "chat/{conversationId}"
 private const val ROUTE_SETTINGS = "settings"
 private const val ROUTE_WORLD = "world"
+private const val ROUTE_CHANGELOG = "changelog"
+private const val KEY_WHATS_NEW = "whats_new_seen_code"
 private const val PREFS = "globeswap"
 private const val KEY_ONBOARDED = "onboarded"
 // Ergebnis der Altersabfrage samt Zustimmung zur Datenschutzerklärung. v1 (nur Monat/Jahr, ohne Zustimmung)
@@ -110,13 +115,25 @@ fun GlobeSwapApp() {
 
     if (!onboarded) {
         OnboardingScreen(onAccept = {
-            prefs.edit().putBoolean(KEY_ONBOARDED, true).apply()
+            // Neue Installation: kein "What's new" für die erste Version.
+            prefs.edit().putBoolean(KEY_ONBOARDED, true).putInt(KEY_WHATS_NEW, BuildConfig.VERSION_CODE).apply()
             onboarded = true
         })
         return
     }
 
     val nav = rememberNavController()
+    // Nach einem Update einmal zeigen, was neu ist.
+    var whatsNew by remember {
+        mutableStateOf(
+            Changelog.load(context, BuildConfig.VERSION_NAME).firstOrNull { it.current }
+                ?.takeIf { prefs.getInt(KEY_WHATS_NEW, 0) < BuildConfig.VERSION_CODE },
+        )
+    }
+    whatsNew?.let { entry ->
+        val seen = { prefs.edit().putInt(KEY_WHATS_NEW, BuildConfig.VERSION_CODE).apply(); whatsNew = null }
+        WhatsNewDialog(entry, onDismiss = seen, onSeeAll = { seen(); nav.navigate(ROUTE_CHANGELOG) })
+    }
     val conversationsVm: ConversationsViewModel = viewModel()
     val conversations by conversationsVm.conversations.collectAsStateWithLifecycle()
     val unread = conversations.count { it.unread }
@@ -172,6 +189,7 @@ fun GlobeSwapApp() {
                     onOpen = { id -> nav.navigate("chat/$id") },
                     onOpenWorld = { nav.navigate(ROUTE_WORLD) },
                     onOpenSettings = { nav.navigate(ROUTE_SETTINGS) },
+                    onOpenChangelog = { nav.navigate(ROUTE_CHANGELOG) },
                     onDeleteAccount = {
                         conversationsVm.deleteAccount { error ->
                             if (error != null) {
@@ -193,6 +211,9 @@ fun GlobeSwapApp() {
             }
             composable(ROUTE_SETTINGS) {
                 SettingsScreen(onBack = { nav.popBackStack() }, onOpenWorld = { nav.navigate(ROUTE_WORLD) })
+            }
+            composable(ROUTE_CHANGELOG) {
+                ChangelogScreen(onBack = { nav.popBackStack() })
             }
             composable(ROUTE_WORLD) {
                 WorldScreen(onBack = { nav.popBackStack() })

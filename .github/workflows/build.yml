@@ -199,6 +199,33 @@ jobs:
           name: ${{ needs.build.outputs.artifact }}
           path: dist
 
+      # Changelog in der App: "## Next" wird zu "## <Version> (<Datum>)" (Commit auf main), die Punkte kommen
+      # auch in die Release-Notizen. Ohne "## Next" bleibt alles, wie es ist.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          path: repo
+
+      - name: Changelog
+        run: |
+          python3 - repo/app/src/main/assets/changelog.md "${{ needs.build.outputs.version }}" "$(date -u +%F)" whatsnew.md <<'PY'
+          import re, sys
+          path, version, day, out = sys.argv[1:]
+          text = open(path, encoding="utf-8").read()
+          m = re.search(r"^## Next[ \t]*\n(.*?)(?=^## |\Z)", text, re.S | re.M)
+          bullets = [l for l in (m.group(1).splitlines() if m else []) if l.startswith("- ")]
+          open(out, "w", encoding="utf-8").write("\n".join(bullets) + ("\n" if bullets else ""))
+          if bullets and not re.search(rf"^## {re.escape(version)}\b", text, re.M):
+              text = text[:m.start()] + f"## Next\n\n## {version} ({day})\n" + m.group(1) + text[m.end():]
+              open(path, "w", encoding="utf-8").write(text)
+          PY
+          cd repo
+          if git diff --quiet; then echo "Changelog unverändert"; exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -am "Changelog: Version ${{ needs.build.outputs.version }}"
+          for i in 1 2 3; do git pull --rebase -q origin main && git push -q origin HEAD:main && break; sleep 5; done
+
       - name: Release-Text
         run: |
           cert=$(cat dist/certificate-sha256.txt)
@@ -207,6 +234,8 @@ jobs:
           ## GlobeSwap ${{ needs.build.outputs.version }}
 
           Swap photos with strangers around the world.
+
+          WHATSNEW
 
           ### Install
           1. Download **GlobeSwap-${{ needs.build.outputs.version }}.apk** below on your Android phone (Android 10 or newer).
@@ -220,6 +249,12 @@ jobs:
           - versionCode ${{ needs.build.outputs.code }}
           NOTES
           sed -i 's/^          //' notes.md
+          if [ -s whatsnew.md ]; then
+            { echo "### What's new"; cat whatsnew.md; } > section.md
+          else
+            : > section.md
+          fi
+          python3 -c "import sys; n=open('notes.md').read(); open('notes.md','w').write(n.replace('WHATSNEW\n', open('section.md').read()))"
 
       - uses: softprops/action-gh-release@v3
         with:
