@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,11 +44,19 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.ui.LegalLinks
+import tech.eiki.globeswap.ui.settings.BackupCodeDialog
+import tech.eiki.globeswap.ui.settings.RestoreDialog
 
 @Composable
-fun OnboardingScreen(onAccept: () -> Unit) {
+fun OnboardingScreen(
+    onAccept: () -> Unit,
+    restore: suspend (String) -> String = { ServiceLocator.repository.restore(it) },
+) {
     var accepted by rememberSaveable { mutableStateOf(false) }
+    var restoring by rememberSaveable { mutableStateOf(false) }
+    var restoredCode by rememberSaveable { mutableStateOf<String?>(null) }
     // Benachrichtigungen für neue Fotos (Android 13+); die Antwort ist egal, es geht in jedem Fall weiter.
     val notificationPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { onAccept() }
     val accept = {
@@ -56,6 +65,13 @@ fun OnboardingScreen(onAccept: () -> Unit) {
         } else {
             onAccept()
         }
+    }
+    if (restoring) {
+        RestoreDialog(restore, onRestored = { restoring = false; restoredCode = it }, onDismiss = { restoring = false })
+    }
+    restoredCode?.let { code ->
+        // Willkommen zurück: der alte Code gilt nicht mehr, also gleich den neuen sichern lassen.
+        BackupCodeDialog(code, "Welcome back! Your new backup code", onDismiss = { restoredCode = null; accept() })
     }
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -94,6 +110,9 @@ fun OnboardingScreen(onAccept: () -> Unit) {
             )
             Button(onClick = accept, enabled = accepted, modifier = Modifier.fillMaxWidth()) {
                 Text("Let's go")
+            }
+            TextButton(onClick = { restoring = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Used GlobeSwap before? Restore with backup code")
             }
         }
     }

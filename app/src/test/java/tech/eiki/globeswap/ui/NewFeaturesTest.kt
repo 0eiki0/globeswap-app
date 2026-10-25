@@ -9,7 +9,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -26,6 +31,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import tech.eiki.globeswap.data.ApiException
 import tech.eiki.globeswap.data.MatchPref
 import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.UserSettings
@@ -116,6 +122,50 @@ class NewFeaturesTest {
         compose.onNodeWithText("The stranger ended this chat").assertExists()
         compose.onNodeWithText("Remove reaction").assertExists()
         captureScreenRoboImage("build/outputs/roborazzi/reactions.png")
+    }
+
+    @Test
+    fun restoreForm() {
+        var restoredWith: String? = null
+        var newCode: String? = null
+        compose.setContent {
+            GlobeSwapTheme {
+                Surface {
+                    tech.eiki.globeswap.ui.settings.RestoreForm(
+                        restore = { restoredWith = it; if (it.startsWith("AAAA")) throw ApiException(404, "invalid_code") else "NEW2-CODE-ABCD-EFGH" },
+                        onRestored = { newCode = it },
+                    )
+                }
+            }
+        }
+        compose.onNodeWithText("Restore").assertIsNotEnabled()
+        val field = compose.onNode(androidx.compose.ui.test.hasSetTextAction())
+        field.performTextInput("aaaa-bbbb-cccc-dddd")
+        compose.onNodeWithText("Restore").assertIsEnabled().performClick()
+        compose.onNodeWithText("This backup code is not valid. Please check it and try again.").assertExists()
+        field.performTextClearance()
+        field.performTextInput("k7qm 2xpa 9rtd hv4e")
+        compose.onNodeWithText("Restore").performClick()
+        compose.waitForIdle()
+        assertEquals("K7QM 2XPA 9RTD HV4E", restoredWith)
+        assertEquals("NEW2-CODE-ABCD-EFGH", newCode)
+    }
+
+    @OptIn(ExperimentalRoborazziApi::class)
+    @Test
+    fun backupCodeDialog() {
+        compose.setContent {
+            GlobeSwapTheme { tech.eiki.globeswap.ui.settings.BackupCodeDialog("K7QM-2XPA-9RTD-HV4E", "Your backup code", onDismiss = {}) }
+        }
+        compose.onNodeWithText("K7QM-2XPA-9RTD-HV4E").assertExists()
+        compose.onNodeWithText("Copy").assertExists()
+        captureScreenRoboImage("build/outputs/roborazzi/backup-code.png")
+    }
+
+    @Test
+    fun onboardingOffersRestore() {
+        compose.setContent { GlobeSwapTheme { tech.eiki.globeswap.ui.onboarding.OnboardingScreen(onAccept = {}, restore = { "" }) } }
+        compose.onNodeWithText("Used GlobeSwap before? Restore with backup code").performScrollTo().assertExists()
     }
 
     @Test

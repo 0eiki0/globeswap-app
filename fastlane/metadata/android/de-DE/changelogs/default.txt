@@ -1,8 +1,8 @@
-• Herkunftsland unter jedem Foto und deine Weltkarte (abschaltbar)
-• Tausch-Wunsch: egal, nah oder fern
-• Tagesthema als Anregung beim Fotografieren
-• Reaktionen auf Fotos, Chats beenden, Chats und eigene Fotos löschen
+• Herkunftsland unter Fotos und deine Weltkarte (abschaltbar)
+• Tausch-Wunsch: egal, nah oder fern; Tagesthema
+• Reaktionen, Chats beenden, Chats und eigene Fotos löschen
 • Antworten im Wechsel, die neuesten 10 Fotos bleiben
-• Sofortige Benachrichtigungen, Update-Hinweis, Altersabfrage
-• Download von GitHub: die App aktualisiert sich selbst
-• Kamera: Zoom, Weitwinkel und Antippen zum Scharfstellen
+• Sofortige Benachrichtigungen, Altersabfrage
+• Backup-Code: Chats nach Neuinstallation zurückholen
+• Kamera: Zoom, Weitwinkel, Antippen zum Scharfstellen
+• GitHub-Version aktualisiert sich selbst

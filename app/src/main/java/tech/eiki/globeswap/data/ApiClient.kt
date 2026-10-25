@@ -12,8 +12,10 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -142,6 +144,21 @@ class ApiClient(
         }
         if (status !in 200..299) throw ApiException(status, errorCode(text))
         return text
+    }
+
+    /**
+     * Konto mit dem Wiederherstellungs-Code zurückholen: ersetzt die eigene (anonyme) Identität durch die alte.
+     * Liefert den neuen Code – der alte ist danach ungültig.
+     */
+    suspend fun restore(code: String): String = tokenLock.withLock {
+        withContext(Dispatchers.IO) {
+            val body = buildJsonObject { put("code", code) }.toString().toRequestBody(JSON)
+            val request = Request.Builder().url("$baseUrl/api/restore").post(body).build()
+            val restored = http.newCall(request).execute().use { json.decodeFromString(RestoreResponse.serializer(), it.bodyOrThrow()) }
+            prefs.edit().putString(KEY_TOKEN, restored.token).putString(KEY_PUBLIC_ID, restored.publicId).apply()
+            onRegistered?.invoke()
+            restored.code
+        }
     }
 
     /** Mindestversion und neuestes Release – ohne Anmeldung, damit auch gesperrte Versionen es abfragen können. */

@@ -42,6 +42,8 @@ data class UserSettings(
     val country: String = "",
     /** Der Server kennt überhaupt Länder. */
     val geoEnabled: Boolean = false,
+    /** Es gibt einen Wiederherstellungs-Code für dieses Konto. */
+    val hasRecoveryCode: Boolean = false,
 )
 
 object MatchPref {
@@ -77,6 +79,12 @@ internal data class SwapResponse(val status: String, val photoId: String, val co
 
 @Serializable
 internal data class RegisterResponse(val userId: String, val token: String, val publicId: String = "")
+
+@Serializable
+internal data class RecoveryCodeResponse(val code: String)
+
+@Serializable
+internal data class RestoreResponse(val userId: String, val token: String, val publicId: String = "", val code: String)
 
 @Serializable
 internal data class MeResponse(val publicId: String)

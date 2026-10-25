@@ -147,6 +147,17 @@ class SwapRepository(private val api: ApiClient) {
         return api.call("PUT", "/api/settings", UserSettings.serializer(), body.toString().toRequestBody(ApiClient.JSON))
     }
 
+    /** Neuen Wiederherstellungs-Code erstellen; ein bisheriger wird damit ungültig. */
+    suspend fun createRecoveryCode(): String =
+        api.call("POST", "/api/recovery-code", RecoveryCodeResponse.serializer()).code
+
+    /** Konto mit dem Code zurückholen; liefert den neuen Code. */
+    suspend fun restore(code: String): String {
+        val newCode = api.restore(code)
+        localChanges.tryEmit(Unit)
+        return newCode
+    }
+
     suspend fun world(): World = api.call("GET", "/api/world", World.serializer())
 
     // ------------------------------------------------------- Moderation & Konto

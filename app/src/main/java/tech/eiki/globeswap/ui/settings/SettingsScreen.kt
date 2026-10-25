@@ -12,6 +12,7 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -26,6 +27,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -60,6 +64,22 @@ class SettingsViewModel : ViewModel() {
 
     fun setMatchPref(pref: String) = update { repo.updateSettings(matchPref = pref) }
 
+    private val _backupCode = MutableStateFlow<String?>(null)
+    /** Gerade erstellter Code zum Anzeigen (nur einmal, der Server kennt nur seinen Hash). */
+    val backupCode: StateFlow<String?> = _backupCode.asStateFlow()
+
+    fun createBackupCode() {
+        viewModelScope.launch {
+            runCatching { repo.createRecoveryCode() }
+                .onSuccess { _backupCode.value = it; _settings.value = _settings.value?.copy(hasRecoveryCode = true) }
+                .onFailure { Log.w("SettingsViewModel", "Code", it); _error.value = it.userMessage() }
+        }
+    }
+
+    fun backupCodeShown() {
+        _backupCode.value = null
+    }
+
     private fun update(call: suspend () -> UserSettings) {
         viewModelScope.launch {
             runCatching { call() }
@@ -74,6 +94,8 @@ class SettingsViewModel : ViewModel() {
 fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsViewModel = viewModel()) {
     val settings by vm.settings.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
+    val backupCode by vm.backupCode.collectAsStateWithLifecycle()
+    backupCode?.let { BackupCodeDialog(it, "Your backup code", onDismiss = vm::backupCodeShown) }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -87,7 +109,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
         val s = settings
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             when {
-                s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld)
+                s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode)
                 error != null -> Column(Modifier.padding(24.dp)) {
                     Text("Could not load your settings: $error")
                     TextButton(onClick = vm::load) { Text("Try again") }
@@ -104,7 +126,18 @@ internal fun SettingsContent(
     onShareCountry: (Boolean) -> Unit,
     onMatchPref: (String) -> Unit,
     onOpenWorld: () -> Unit,
+    onCreateBackupCode: () -> Unit = {},
 ) {
+    var confirmNewCode by remember { mutableStateOf(false) }
+    if (confirmNewCode) {
+        AlertDialog(
+            onDismissRequest = { confirmNewCode = false },
+            title = { Text("Create a new backup code?") },
+            text = { Text("Your old backup code will stop working.") },
+            confirmButton = { TextButton(onClick = { confirmNewCode = false; onCreateBackupCode() }) { Text("Create") } },
+            dismissButton = { TextButton(onClick = { confirmNewCode = false }) { Text("Cancel") } },
+        )
+    }
     SectionTitle("Your country")
     Row(
         Modifier.fillMaxWidth().clickable(enabled = settings.geoEnabled) { onShareCountry(!settings.shareCountry) }
@@ -161,6 +194,23 @@ internal fun SettingsContent(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
     )
     HorizontalDivider(Modifier.padding(top = 12.dp))
+
+    SectionTitle("Backup code")
+    Text(
+        if (settings.hasRecoveryCode) {
+            "You have a backup code. With it you get your chats back after reinstalling the app. Lost it? Create a new one."
+        } else {
+            "Reinstalling the app or getting a new phone? With a backup code you get your chats, ID and world map back."
+        },
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 16.dp),
+    )
+    TextButton(
+        onClick = { if (settings.hasRecoveryCode) confirmNewCode = true else onCreateBackupCode() },
+        modifier = Modifier.padding(horizontal = 8.dp),
+    ) { Text(if (settings.hasRecoveryCode) "Create new backup code" else "Create backup code") }
+    HorizontalDivider(Modifier.padding(top = 4.dp))
     TextButton(onClick = onOpenWorld, modifier = Modifier.padding(8.dp)) { Text("Open your world map") }
 }
 

@@ -24,6 +24,7 @@ fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Sc
   und „Your world“: Weltkarte der Länder, aus denen man Fotos bekam (Natural Earth, `assets/world.txt`)
 * Tausch-Wunsch egal / nah / fern (Kontinent), Tagesthema über der Kamera
 * Reaktionen auf Fotos (doppelt tippen = ❤️, lange drücken = Auswahl), Chat beenden ohne Blockieren
+* Backup-Code (Settings): nach einer Neuinstallation über „Restore with backup code“ Konto und Chats zurückholen
 * Altersabfrage (Tag, Monat, Jahr, ab 16) vor dem ersten Start;
   gespeichert wird nur das Ergebnis
 * Melden, Blockieren, alle eigenen Daten löschen

@@ -1,8 +1,8 @@
-• Country under every photo and your own world map (can be switched off in settings)
-• Swap preference: anyone, nearby or far away
-• Daily theme for inspiration
-• React to photos, end chats, delete chats and your own photos
+• Country under photos and your world map (can be switched off)
+• Swap preference: anyone, nearby or far away; daily theme
+• Reactions, end chats, delete chats and your own photos
 • Chats take turns, the latest 10 photos are kept
-• Instant notifications, update notice, age check
-• Installed from GitHub: the app now updates itself
-• Camera: pinch to zoom, zoom buttons, ultra-wide and tap to focus
+• Instant notifications, age check
+• Backup code: get your chats back after reinstalling
+• Camera: zoom, ultra-wide, tap to focus
+• The GitHub version updates itself
