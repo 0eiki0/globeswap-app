@@ -12,6 +12,7 @@ fun Throwable.userMessage(): String = when (this) {
         "invalid_image" -> "The photo could not be processed."
         "blocked" -> "This chat is blocked."
         "not_yours" -> "You can only delete your own photos."
+        "invalid_name" -> "This name isn't allowed. Use up to 24 letters or numbers – no links, emails or phone numbers."
         "invalid_code" -> "This backup code is not valid. Please check it and try again."
         "ended" -> "This chat has ended."
         "not_your_turn" -> "Wait for the stranger's photo before you reply."

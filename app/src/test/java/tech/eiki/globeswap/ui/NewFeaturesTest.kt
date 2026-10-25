@@ -37,6 +37,7 @@ import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.UserSettings
 import tech.eiki.globeswap.data.World
 import tech.eiki.globeswap.data.WorldCountry
+import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.ui.camera.DailyTheme
 import tech.eiki.globeswap.ui.chat.ChatEnded
 import tech.eiki.globeswap.ui.chat.MessageList
@@ -166,6 +167,37 @@ class NewFeaturesTest {
     fun onboardingOffersRestore() {
         compose.setContent { GlobeSwapTheme { tech.eiki.globeswap.ui.onboarding.OnboardingScreen(onAccept = {}, restore = { "" }) } }
         compose.onNodeWithText("Used GlobeSwap before? Restore with backup code").performScrollTo().assertExists()
+    }
+
+    @Test
+    fun nameEditor() {
+        val saved = mutableListOf<String>()
+        compose.setContent {
+            GlobeSwapTheme { Surface { Column { tech.eiki.globeswap.ui.settings.NameEditor("Alice", { saved += it }, error = null) } } }
+        }
+        compose.onNodeWithText("Save").assertIsNotEnabled() // unverändert
+        compose.onNodeWithText("Remove name").performClick()
+        assertEquals(listOf(""), saved)
+        compose.onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput("  Bob ")
+        compose.onNodeWithText("Save").performClick()
+        assertEquals(listOf("", "Bob"), saved)
+    }
+
+    @Test
+    fun nameShownInsteadOfStranger() {
+        lateinit var state: androidx.compose.foundation.lazy.LazyListState
+        compose.setContent {
+            state = rememberLazyListState()
+            GlobeSwapTheme {
+                Surface {
+                    MessageList(messages(2), maxPhotos = 0, photoUrl = { "" }, listState = state, otherName = "Alice", modifier = Modifier.height(900.dp))
+                }
+            }
+        }
+        compose.onNodeWithText("Alice", substring = true).assertExists()
+        val conversation = tech.eiki.globeswap.data.Conversation("c", "u", 0, false, "p", unread = false, blocked = false)
+        assertEquals("Stranger", conversation.displayName)
+        assertEquals("Alice", conversation.copy(name = "Alice").displayName)
     }
 
     @Test

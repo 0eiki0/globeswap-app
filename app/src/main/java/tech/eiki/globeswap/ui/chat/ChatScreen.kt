@@ -75,6 +75,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import tech.eiki.globeswap.data.Countries
+import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.ReportReason
 import tech.eiki.globeswap.ui.StrangerId
@@ -130,7 +131,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(listOf("Stranger", Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
+                        Text(listOf(conversation?.displayName ?: "Stranger", Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
                         StrangerId(conversation?.label.orEmpty())
                     }
                 },
@@ -176,7 +177,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                         Text("This chat no longer exists.", color = MaterialTheme.colorScheme.error)
                     state == ChatViewModel.DetailState.Loading -> CircularProgressIndicator()
                     blocked -> Text("This chat is blocked.", color = MaterialTheme.colorScheme.error)
-                    conversation?.ended == true -> ChatEnded(byMe = conversation.endedByMe)
+                    conversation?.ended == true -> ChatEnded(byMe = conversation.endedByMe, otherName = conversation.name)
                     sending -> CircularProgressIndicator()
                     // Immer im Wechsel: erst wieder antworten, wenn das Gegenüber ein Foto geschickt hat.
                     conversation?.lastFromMe == true -> WaitingForReply()
@@ -192,6 +193,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
         MessageList(
             messages = messages,
             maxPhotos = maxPhotos,
+            otherName = conversation?.name.orEmpty(),
             photoUrl = vm::photoUrl,
             listState = listState,
             modifier = Modifier.fillMaxSize().padding(padding),
@@ -286,6 +288,7 @@ internal fun MessageList(
     maxPhotos: Int,
     photoUrl: (String) -> String,
     listState: LazyListState,
+    otherName: String = "",
     modifier: Modifier = Modifier,
     onOpen: (Message) -> Unit = {},
     onLongPress: (Message) -> Unit = {},
@@ -304,6 +307,7 @@ internal fun MessageList(
             } else {
                 PhotoBubble(
                     message = message,
+                    otherName = otherName,
                     url = photoUrl(message.photoId),
                     onClick = { onOpen(message) },
                     onLongClick = { onLongPress(message) },
@@ -364,9 +368,9 @@ internal fun ReactionPicker(current: String, onPick: (String) -> Unit, onDismiss
 }
 
 @Composable
-internal fun ChatEnded(byMe: Boolean) {
+internal fun ChatEnded(byMe: Boolean, otherName: String = "") {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(if (byMe) "You ended this chat" else "The stranger ended this chat", style = MaterialTheme.typography.titleSmall)
+        Text(if (byMe) "You ended this chat" else "${otherName.ifBlank { "The stranger" }} ended this chat", style = MaterialTheme.typography.titleSmall)
         Text(
             "No more photos can be sent here. Take a new photo to meet someone else.",
             style = MaterialTheme.typography.bodySmall,
@@ -437,6 +441,7 @@ internal fun PhotoBubble(
     message: Message,
     url: String,
     onClick: () -> Unit,
+    otherName: String = "",
     onLongClick: () -> Unit,
     onDoubleClick: (() -> Unit)? = null,
 ) {
@@ -466,7 +471,7 @@ internal fun PhotoBubble(
         }
         Text(
             buildString {
-                append(if (mine) "You" else "Stranger")
+                append(if (mine) "You" else otherName.ifBlank { "Stranger" })
                 if (!mine && message.country.isNotEmpty()) append(" · ").append(Countries.label(message.country))
                 append(" · ").append(DateUtils.getRelativeTimeSpanString(message.createdAt))
             },

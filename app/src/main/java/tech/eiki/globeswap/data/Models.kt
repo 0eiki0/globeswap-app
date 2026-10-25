@@ -14,10 +14,15 @@ data class Conversation(
     val blocked: Boolean,
     /** Land der anderen Person (ISO-Code), wenn sie es teilt. */
     val country: String = "",
+    /** Freiwilliger Name der anderen Person ("" = keiner). */
+    val name: String = "",
     /** Beendet: keine neuen Fotos mehr. */
     val ended: Boolean = false,
     val endedByMe: Boolean = false,
 )
+
+/** Name der anderen Person zum Anzeigen: ihr freiwilliger Name oder "Stranger". */
+val Conversation.displayName: String get() = name.ifBlank { "Stranger" }
 
 @Serializable
 data class Message(
@@ -44,6 +49,8 @@ data class UserSettings(
     val geoEnabled: Boolean = false,
     /** Es gibt einen Wiederherstellungs-Code für dieses Konto. */
     val hasRecoveryCode: Boolean = false,
+    /** Eigener freiwilliger Name ("" = keiner). */
+    val displayName: String = "",
 )
 
 object MatchPref {

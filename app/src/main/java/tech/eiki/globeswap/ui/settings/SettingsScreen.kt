@@ -2,6 +2,7 @@ package tech.eiki.globeswap.ui.settings
 
 import android.util.Log
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,12 +14,14 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -29,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -64,6 +68,18 @@ class SettingsViewModel : ViewModel() {
 
     fun setMatchPref(pref: String) = update { repo.updateSettings(matchPref = pref) }
 
+    /** Name setzen oder mit "" löschen; Fehler (z. B. nicht erlaubter Name) kommen in [nameError]. */
+    fun setName(name: String) {
+        viewModelScope.launch {
+            runCatching { repo.updateSettings(displayName = name) }
+                .onSuccess { _settings.value = it; _nameError.value = null }
+                .onFailure { _nameError.value = it.userMessage() }
+        }
+    }
+
+    private val _nameError = MutableStateFlow<String?>(null)
+    val nameError: StateFlow<String?> = _nameError.asStateFlow()
+
     private val _backupCode = MutableStateFlow<String?>(null)
     /** Gerade erstellter Code zum Anzeigen (nur einmal, der Server kennt nur seinen Hash). */
     val backupCode: StateFlow<String?> = _backupCode.asStateFlow()
@@ -95,6 +111,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
     val settings by vm.settings.collectAsStateWithLifecycle()
     val error by vm.error.collectAsStateWithLifecycle()
     val backupCode by vm.backupCode.collectAsStateWithLifecycle()
+    val nameError by vm.nameError.collectAsStateWithLifecycle()
     backupCode?.let { BackupCodeDialog(it, "Your backup code", onDismiss = vm::backupCodeShown) }
     Scaffold(
         topBar = {
@@ -109,7 +126,7 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
         val s = settings
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
             when {
-                s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode)
+                s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode, vm::setName, nameError)
                 error != null -> Column(Modifier.padding(24.dp)) {
                     Text("Could not load your settings: $error")
                     TextButton(onClick = vm::load) { Text("Try again") }
@@ -127,6 +144,8 @@ internal fun SettingsContent(
     onMatchPref: (String) -> Unit,
     onOpenWorld: () -> Unit,
     onCreateBackupCode: () -> Unit = {},
+    onSetName: (String) -> Unit = {},
+    nameError: String? = null,
 ) {
     var confirmNewCode by remember { mutableStateOf(false) }
     if (confirmNewCode) {
@@ -138,6 +157,10 @@ internal fun SettingsContent(
             dismissButton = { TextButton(onClick = { confirmNewCode = false }) { Text("Cancel") } },
         )
     }
+    SectionTitle("Your name")
+    NameEditor(settings.displayName, onSetName, nameError)
+    HorizontalDivider(Modifier.padding(top = 8.dp))
+
     SectionTitle("Your country")
     Row(
         Modifier.fillMaxWidth().clickable(enabled = settings.geoEnabled) { onShareCountry(!settings.shareCountry) }
@@ -222,4 +245,34 @@ private fun SectionTitle(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
     )
+}
+
+/** Freiwilliger Name: Chat-Partner sehen ihn statt "Stranger". */
+@Composable
+internal fun NameEditor(current: String, onSetName: (String) -> Unit, error: String?) {
+    var text by rememberSaveable(current) { mutableStateOf(current) }
+    Column(Modifier.padding(horizontal = 16.dp)) {
+        Text(
+            "Optional. People you chat with see it instead of “Stranger” – your ID stays the same. " +
+                "Better not use your full real name.",
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        OutlinedTextField(
+            value = text,
+            onValueChange = { text = it.take(24) },
+            label = { Text("Name") },
+            placeholder = { Text("Stranger") },
+            singleLine = true,
+            isError = error != null,
+            supportingText = { Text(error ?: "${text.length}/24") },
+            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Button(onClick = { onSetName(text.trim()) }, enabled = text.trim().isNotEmpty() && text.trim() != current) { Text("Save") }
+            if (current.isNotEmpty()) {
+                TextButton(onClick = { text = ""; onSetName("") }) { Text("Remove name") }
+            }
+        }
+    }
 }

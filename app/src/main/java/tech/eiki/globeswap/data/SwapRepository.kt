@@ -139,10 +139,11 @@ class SwapRepository(private val api: ApiClient) {
 
     suspend fun settings(): UserSettings = api.call("GET", "/api/settings", UserSettings.serializer())
 
-    suspend fun updateSettings(shareCountry: Boolean? = null, matchPref: String? = null): UserSettings {
+    suspend fun updateSettings(shareCountry: Boolean? = null, matchPref: String? = null, displayName: String? = null): UserSettings {
         val body = buildJsonObject {
             shareCountry?.let { put("shareCountry", it) }
             matchPref?.let { put("matchPref", it) }
+            displayName?.let { put("displayName", it) }
         }
         return api.call("PUT", "/api/settings", UserSettings.serializer(), body.toString().toRequestBody(ApiClient.JSON))
     }

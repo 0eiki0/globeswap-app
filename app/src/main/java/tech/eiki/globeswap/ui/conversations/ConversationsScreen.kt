@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.Countries
+import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.ui.StrangerId
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -136,7 +137,7 @@ fun ConversationsScreen(
                     headlineContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                listOf("Stranger", Countries.flag(conversation.country)).filter { it.isNotEmpty() }.joinToString(" "),
+                                listOf(conversation.displayName, Countries.flag(conversation.country)).filter { it.isNotEmpty() }.joinToString(" "),
                                 fontWeight = if (unread) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.weight(1f),
                             )
