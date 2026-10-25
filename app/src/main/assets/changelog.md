@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Achievements on your world map, and how much of the world you've seen compared to others
 
 ## 2.7 (2026-10-25)
 - Give yourself a name if you like (Settings → Your name) – people you chat with see it instead of "Stranger"

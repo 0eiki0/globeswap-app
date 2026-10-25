@@ -63,7 +63,12 @@ object MatchPref {
 data class WorldCountry(val country: String, val continent: String = "", val photos: Int = 0, val firstAt: Long = 0)
 
 @Serializable
-data class World(val countries: List<WorldCountry> = emptyList(), val continents: Int = 0)
+data class World(
+    val countries: List<WorldCountry> = emptyList(),
+    val continents: Int = 0,
+    /** Anonymer Vergleich: so viel Prozent der aktiven Nutzer haben weniger Länder (null = zu wenige zum Vergleichen). */
+    val percentile: Int? = null,
+)
 
 @Serializable
 data class ConversationDetail(

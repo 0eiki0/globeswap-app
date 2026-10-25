@@ -13,6 +13,7 @@ import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -86,11 +87,18 @@ class NewFeaturesTest {
         val world = World(
             listOf(WorldCountry("JP", "AS", 12), WorldCountry("BR", "SA", 5), WorldCountry("DE", "EU", 3), WorldCountry("CA", "NA", 1)),
             continents = 4,
+            percentile = 80,
         )
         compose.setContent { GlobeSwapTheme { Surface { WorldContent(world, shapes) } } }
-        compose.onNodeWithText("Japan").assertExists()
-        compose.onNodeWithText("12 photos").assertExists()
+        compose.onNodeWithText("You've seen more of the world than 80% of GlobeSwap users.").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/world.png")
+        val list = compose.onNode(androidx.compose.ui.test.hasScrollAction())
+        // 1 Länder-Meilenstein, 4 Kontinente, "10 photos" (21 Fotos) = 6 von 14
+        list.performScrollToNode(androidx.compose.ui.test.hasText("Achievements · 6 of 14"))
+        list.performScrollToNode(androidx.compose.ui.test.hasText("Hello Asia"))
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/world-achievements.png")
+        list.performScrollToNode(androidx.compose.ui.test.hasText("Japan"))
+        compose.onNodeWithText("12 photos").assertExists()
     }
 
     @Test
