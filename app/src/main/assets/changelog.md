@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 2.7 (2026-10-25)
 - Give yourself a name if you like (Settings → Your name) – people you chat with see it instead of "Stranger"
 - Backup code: get your account and chats back after reinstalling (Settings → Backup code)
 - See what changed in every version on this page
