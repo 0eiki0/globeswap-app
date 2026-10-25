@@ -45,7 +45,7 @@ Technik: minSdk 29 (Android 10), targetSdk/compileSdk 36 (Android 16), Android G
 Adresse des Servers in `gradle.properties`:
 
 ```properties
-globeswap.serverUrl=https://swap.eiki.tech
+globeswap.serverUrl=https://globeswap.de
 ```
 
 ```bash

@@ -15,10 +15,10 @@ Alles, was du zum Hochladen brauchst, liegt in diesem Ordner:
 1. **Server aktualisieren** und in `photoswap.env` die Impressumsangaben eintragen
    (`LEGAL_NAME`, `LEGAL_STREET`, `LEGAL_CITY`, `LEGAL_EMAIL`, empfohlen `LEGAL_PHONE`), Server neu starten.
 2. Im Browser prüfen, dass diese Seiten deine Angaben zeigen:
-   - https://swap.eiki.tech/privacy
-   - https://swap.eiki.tech/terms
-   - https://swap.eiki.tech/imprint
-   - https://swap.eiki.tech/delete-account
+   - https://globeswap.de/privacy
+   - https://globeswap.de/terms
+   - https://globeswap.de/imprint
+   - https://globeswap.de/delete-account
 3. Paketname in der Play Console: `tech.eiki.globeswap`.
 
 ## 1. Entwicklerkonto
@@ -35,7 +35,7 @@ Play Console → **App erstellen**:
 
 ## 3. App-Inhalte („Richtlinie“ → „App-Inhalte“)
 
-**Datenschutzerklärung:** `https://swap.eiki.tech/privacy`
+**Datenschutzerklärung:** `https://globeswap.de/privacy`
 
 **App-Zugriff:** „Alle Funktionen sind ohne besondere Zugriffsrechte verfügbar“.
 Hinweis für die Prüfer (Feld „Anleitung“, auf Englisch):
@@ -62,7 +62,7 @@ Hinweis für die Prüfer (Feld „Anleitung“, auf Englisch):
 - Werden alle Daten bei der Übertragung verschlüsselt? **Ja** (HTTPS)
 - Können Nutzer das Löschen ihrer Daten beantragen? **Ja**
 - Kontoerstellung: Die App erstellt ein anonymes Konto →
-  Link zum Löschen: `https://swap.eiki.tech/delete-account`
+  Link zum Löschen: `https://globeswap.de/delete-account`
 
 | Datentyp | Erhoben | Geteilt* | Optional? | Zweck |
 |---|---|---|---|---|
@@ -81,7 +81,7 @@ Behörden-App **Nein**.
 - Texte aus `listing-en.txt` kopieren. Für Deutsch: „Übersetzungen verwalten“ → Deutsch hinzufügen.
 - App-Symbol: `icon-512.png` · Feature-Grafik: `feature-graphic.png`
 - Smartphone-Screenshots: die 4 Dateien aus `screenshots/`
-- Kategorie: **Fotografie** · Kontakt-E-Mail: deine Adresse · Website: `https://swap.eiki.tech`
+- Kategorie: **Fotografie** · Kontakt-E-Mail: deine Adresse · Website: `https://globeswap.de`
 
 ## 5. Geschlossener Test (Pflicht bei neuem privatem Konto)
 
@@ -102,7 +102,7 @@ zum Test beantworten, dann unter **Produktion** einen Release mit demselben `.aa
 einreichen. Die Prüfung dauert meist einige Tage.
 
 Nach der Freischaltung: den Play-Store-Link in `photoswap.env` bei `PLAY_STORE_URL` eintragen und den
-Server neu starten – dann erscheint auf https://swap.eiki.tech ein „Get it on Google Play“-Knopf.
+Server neu starten – dann erscheint auf https://globeswap.de ein „Get it on Google Play“-Knopf.
 
 ## Updates später
 

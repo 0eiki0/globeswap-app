@@ -26,7 +26,7 @@ a photo somewhere else, and you get theirs. Reply with photos, edit them with te
 stickers and filters. No sign-up, no ads, no trackers, no Google services.
 
 Anti-features:
-- NonFreeNet: the app talks to the GlobeSwap server (https://swap.eiki.tech), whose source code
+- NonFreeNet: the app talks to the GlobeSwap server (https://globeswap.de), whose source code
   is not public.
 
 Notes:
