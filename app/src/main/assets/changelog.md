@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.1.1 (2026-10-26)
 - Achievements: clearer texts – photo badges count every photo from a stranger
 
 ## 3.1 (2026-10-26)
