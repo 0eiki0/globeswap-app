@@ -14,6 +14,8 @@ import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
 import androidx.camera.view.PreviewView
@@ -28,8 +30,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -63,12 +67,15 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -86,7 +93,7 @@ import tech.eiki.globeswap.ui.editor.PhotoEditor
 import tech.eiki.globeswap.util.ImageUtils
 
 /**
- * Vollbild-Kamera, danach der Editor (Text, Zeichnen, Sticker, Filter). [onConfirm] erhält das fertige JPEG.
+ * Kamera mit Sucher im Fotoformat 3:4, danach der Editor (Text, Zeichnen, Sticker, Filter). [onConfirm] erhält das fertige JPEG.
  */
 @Composable
 fun PhotoCapture(
@@ -147,11 +154,15 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
     var pendingZoom by remember { mutableStateOf<Float?>(null) }
     var focusPoint by remember { mutableStateOf<Offset?>(null) }
 
+    // Sucher und Foto haben dasselbe Format 3:4 (hochkant): Was man im Sucher sieht, ist genau das Foto.
     val previewView = remember {
         PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER }
     }
     val imageCapture = remember {
-        ImageCapture.Builder().setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY).build()
+        ImageCapture.Builder()
+            .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
+            .setResolutionSelector(FOUR_THREE)
+            .build()
     }
 
     LaunchedEffect(Unit) { provider = ProcessCameraProvider.awaitInstance(context) }
@@ -160,7 +171,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
         val cameraProvider = provider
         var bound: Camera? = null
         if (cameraProvider != null) {
-            val preview = Preview.Builder().build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
+            val preview = Preview.Builder().setResolutionSelector(FOUR_THREE).build().also { it.setSurfaceProvider(previewView.surfaceProvider) }
             val wide = wideSelector.takeIf { useWide && lensFacing == CameraSelector.LENS_FACING_BACK }
             val selector = wide ?: CameraSelector.Builder().requireLensFacing(lensFacing).build()
             try {
@@ -232,44 +243,13 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
         )
     }
 
-    Box(Modifier.fillMaxSize()) {
-        AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
-        // Zwei Finger: zoomen. Antippen: dort scharfstellen.
-        Box(
-            Modifier
-                .fillMaxSize()
-                .pointerInput(camera) {
-                    detectTransformGestures { _, _, zoom, _ ->
-                        val cam = camera ?: return@detectTransformGestures
-                        if (zoom != 1f) {
-                            val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
-                            cam.cameraControl.setZoomRatio((state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio))
-                        }
-                    }
-                }
-                .pointerInput(camera) {
-                    detectTapGestures { offset ->
-                        val cam = camera ?: return@detectTapGestures
-                        val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
-                        cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
-                        focusPoint = offset
-                    }
-                },
-        )
-        focusPoint?.let { p ->
-            Box(
-                Modifier
-                    .offset { IntOffset(p.x.roundToInt() - 32.dp.roundToPx(), p.y.roundToInt() - 32.dp.roundToPx()) }
-                    .size(64.dp)
-                    .border(2.dp, Color.White, CircleShape),
-            )
-        }
-
-        Row(
-            Modifier.fillMaxWidth().statusBarsPadding().padding(8.dp),
-            horizontalArrangement = Arrangement.End,
-        ) {
-            IconButton(onClick = { flashOn = !flashOn }) {
+    Column(Modifier.fillMaxSize()) {
+        // Oben: Tagesthema und Blitz auf dunklem Grund, nicht über dem Bild
+        Box(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 8.dp, vertical = 4.dp)) {
+            if (theme.isNotBlank()) {
+                DailyTheme(theme, Modifier.align(Alignment.Center).padding(horizontal = 48.dp))
+            }
+            IconButton(onClick = { flashOn = !flashOn }, modifier = Modifier.align(Alignment.CenterEnd)) {
                 Icon(
                     if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
                     contentDescription = stringResource(R.string.flash),
@@ -278,58 +258,97 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
             }
         }
 
-        if (theme.isNotBlank()) {
-            DailyTheme(theme, Modifier.align(Alignment.TopCenter).statusBarsPadding().padding(top = 16.dp, start = 24.dp, end = 24.dp))
-        }
-
-        Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            if (hint != null) {
-                Text(
-                    hint,
-                    color = Color.White,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier
-                        .padding(horizontal = 24.dp, vertical = 16.dp)
-                        .background(Color.Black.copy(alpha = 0.45f), MaterialTheme.shapes.medium)
-                        .padding(horizontal = 12.dp, vertical = 8.dp),
-                )
-            }
-            ZoomChips(presets, shownZoom, onSelect = ::selectZoom, modifier = Modifier.padding(bottom = 16.dp))
-            Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Spacer(Modifier.size(48.dp))
+        // Sucher im Fotoformat 3:4 – auf kleinen Bildschirmen schmaler statt abgeschnitten
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+            Box(Modifier.aspectRatio(3f / 4f).clip(RectangleShape).background(Color(0xFF1A1A1A)).testTag("viewfinder")) {
+                AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+                // Zwei Finger: zoomen. Antippen: dort scharfstellen.
                 Box(
                     Modifier
-                        .size(76.dp)
-                        .border(4.dp, Color.White, CircleShape)
-                        .padding(8.dp)
-                        .background(if (busy) Color.Gray else Color.White, CircleShape)
-                        .clickable(enabled = !busy) { takePhoto() },
-                    contentAlignment = Alignment.Center,
+                        .fillMaxSize()
+                        .pointerInput(camera) {
+                            detectTransformGestures { _, _, zoom, _ ->
+                                val cam = camera ?: return@detectTransformGestures
+                                if (zoom != 1f) {
+                                    val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
+                                    cam.cameraControl.setZoomRatio((state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio))
+                                }
+                            }
+                        }
+                        .pointerInput(camera) {
+                            detectTapGestures { offset ->
+                                val cam = camera ?: return@detectTapGestures
+                                val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
+                                cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
+                                focusPoint = offset
+                            }
+                        },
+                )
+                focusPoint?.let { p ->
+                    Box(
+                        Modifier
+                            .offset { IntOffset(p.x.roundToInt() - 32.dp.roundToPx(), p.y.roundToInt() - 32.dp.roundToPx()) }
+                            .size(64.dp)
+                            .border(2.dp, Color.White, CircleShape),
+                    )
+                }
+                Column(
+                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 12.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.Black)
-                }
-                IconButton(onClick = {
-                    useWide = false
-                    lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                        CameraSelector.LENS_FACING_FRONT
-                    } else {
-                        CameraSelector.LENS_FACING_BACK
+                    if (hint != null) {
+                        Text(
+                            hint,
+                            color = Color.White,
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp, vertical = 8.dp)
+                                .background(Color.Black.copy(alpha = 0.45f), MaterialTheme.shapes.medium)
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                        )
                     }
-                }) {
-                    Icon(Icons.Default.FlipCameraAndroid, contentDescription = stringResource(R.string.switch_camera), tint = Color.White)
+                    ZoomChips(presets, shownZoom, onSelect = ::selectZoom)
                 }
+            }
+        }
+
+        // Unten: Auslöser und Kamera wechseln
+        Row(
+            Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Spacer(Modifier.size(48.dp))
+            Box(
+                Modifier
+                    .size(76.dp)
+                    .border(4.dp, Color.White, CircleShape)
+                    .padding(8.dp)
+                    .background(if (busy) Color.Gray else Color.White, CircleShape)
+                    .clickable(enabled = !busy) { takePhoto() },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.Black)
+            }
+            IconButton(onClick = {
+                useWide = false
+                lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                    CameraSelector.LENS_FACING_FRONT
+                } else {
+                    CameraSelector.LENS_FACING_BACK
+                }
+            }) {
+                Icon(Icons.Default.FlipCameraAndroid, contentDescription = stringResource(R.string.switch_camera), tint = Color.White)
             }
         }
     }
 }
+
+/** Vorschau und Foto im Format 4:3 (hochkant 3:4), notfalls das nächstbeste Format der Kamera. */
+private val FOUR_THREE = ResolutionSelector.Builder()
+    .setAspectRatioStrategy(AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY)
+    .build()
 
 @Composable
 private fun PermissionMissing(onRequest: () -> Unit) {

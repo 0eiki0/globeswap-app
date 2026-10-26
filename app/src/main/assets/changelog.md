@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Camera: the viewfinder now shows exactly the photo you take – no more surprise when you press the shutter
 - GlobeSwap now speaks German – it follows your phone's language, or pick one in Settings → Language
 
 ## 2.8 (2026-10-25)
