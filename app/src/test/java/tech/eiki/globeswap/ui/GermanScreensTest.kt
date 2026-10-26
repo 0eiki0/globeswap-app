@@ -82,7 +82,7 @@ class GermanScreensTest {
             GlobeSwapTheme { Surface { Column { SettingsContent(UserSettings(true, MatchPref.FAR, "DE", geoEnabled = true), {}, {}, {}) } } }
         }
         compose.onNodeWithText("Mein Land anzeigen").assertExists()
-        compose.onNodeWithText("Fremde sehen „🇩🇪 Deutschland“ bei deinen Fotos. Nur das Land, nie deinen Standort.").assertExists()
+        compose.onNodeWithText("Stranger sehen „🇩🇪 Deutschland“ bei deinen Fotos. Nur das Land, nie deinen Standort.").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/de-settings.png")
     }
 
@@ -113,7 +113,7 @@ class GermanScreensTest {
             }
         }
         compose.onNodeWithText("GlobeSwap 2.9 ist verfügbar").assertExists()
-        compose.onNodeWithText("Die fremde Person hat diesen Chat beendet").assertExists()
+        compose.onNodeWithText("Der Stranger hat diesen Chat beendet").assertExists()
         compose.onNodeWithText("Wann bist du geboren?").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/de-misc.png")
     }
@@ -137,7 +137,7 @@ class GermanScreensTest {
 
     @Test
     fun errorsAndCountries() {
-        assertEquals("Warte auf das Foto der fremden Person, bevor du antwortest.", ApiException(409, "not_your_turn").userMessage())
+        assertEquals("Warte auf das Foto des Strangers, bevor du antwortest.", ApiException(409, "not_your_turn").userMessage())
         assertEquals("🇯🇵 Japan", Countries.label("JP"))
         assertEquals("🇩🇪 Deutschland", Countries.label("DE"))
     }

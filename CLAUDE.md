@@ -22,7 +22,7 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
 - **Zweisprachig (Englisch + Deutsch):** Keine Texte für Nutzer direkt im Code. Jeder neue oder geänderte Text kommt
   in `res/values/strings.xml` (Englisch, Standard) **und** `res/values-de/strings.xml` (Deutsch, „du“) – gleicher Key.
   In Compose `stringResource`/`pluralStringResource`, sonst `context.getString` bzw. `appString` (`util/Strings.kt`).
-  Begriffe: „Stranger“ = „Fremde Person“; Senden-Knopf heißt in allen Sprachen „Swap!“, der Tab „Swap“ (Name der App). Lange deutsche Texte mit `GermanScreensTest` prüfen.
+  Begriffe: „Stranger“ heißt auch auf Deutsch immer „Stranger“ (der Stranger, des Strangers, mit Strangern); Senden-Knopf heißt in allen Sprachen „Swap!“, der Tab „Swap“ (Name der App). Lange deutsche Texte mit `GermanScreensTest` prüfen.
   Changelog und Tagesthemen bleiben Englisch. Sprache wählbar in Einstellungen → Sprache (`util/AppLanguage.kt`):
   Texte außerhalb von Compose immer über `AppLanguage.wrap(context)` bzw. `appString`, nicht direkt über den App-Kontext.
 
