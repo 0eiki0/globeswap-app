@@ -19,6 +19,11 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
   Der alte Signierschlüssel wird nicht mehr verwendet.
 - Der Server-Code bleibt privat; nichts daraus in dieses öffentliche Repo (GPL-3.0) kopieren.
 - Keine echten Nutzerfotos in Screenshots, Videos oder Tests – nur gezeichnete Beispiele.
+- **Zweisprachig (Englisch + Deutsch):** Keine Texte für Nutzer direkt im Code. Jeder neue oder geänderte Text kommt
+  in `res/values/strings.xml` (Englisch, Standard) **und** `res/values-de/strings.xml` (Deutsch, „du“) – gleicher Key.
+  In Compose `stringResource`/`pluralStringResource`, sonst `context.getString` bzw. `appString` (`util/Strings.kt`).
+  Begriffe: „Stranger“ = „Fremde Person“, Tauschen-Knopf = „Tauschen!“. Lange deutsche Texte mit `GermanScreensTest` prüfen.
+  Changelog und Tagesthemen bleiben Englisch.
 
 ## Technik
 - Domain/Server: `https://globeswap.de` (`globeswap.serverUrl` in `gradle.properties`); alte Domain swap.eiki.tech nur noch Alias.
