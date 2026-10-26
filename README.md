@@ -4,11 +4,10 @@ Fotos tauschen mit Fremden auf der ganzen Welt: Du machst ein Foto, es geht an e
 zur gleichen Zeit irgendwo ein Foto gemacht hat, und du bekommst deren Foto zurück. Auf jedes Foto kannst du
 mit einem Foto antworten. Keine Registrierung, keine Werbung, kein Google/Firebase.
 
-Das Backend liegt in einem eigenen Repository: **globeswap-server**.
+Das Backend liegt in einem eigenen Repository: **globeswap-server**. Werbung, Videos und Store-Material: **globeswap-marketing**.
 
 ```
 app/       Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager)
-store/     Play-Store-Material: Icon, Feature-Grafik, Screenshots, Texte, Anleitungen
 fastlane/  Store-Daten für F-Droid/IzzyOnDroid (Titel, Beschreibungen, Icon, Screenshots, Änderungen)
 ```
 
@@ -95,7 +94,7 @@ keyPassword=…
 
 Paketname: `tech.eiki.globeswap` (`applicationId` in `app/build.gradle.kts`).
 `versionCode` wird beim Build auf GitHub automatisch erhöht (siehe „Versionsnummer“).
-Schritt-für-Schritt-Anleitung: [`store/PLAY-STORE-ANLEITUNG.md`](store/PLAY-STORE-ANLEITUNG.md).
+Store-Grafiken, Texte und die Schritt-für-Schritt-Anleitung liegen im Repo **globeswap-marketing** (`store/PLAY-STORE-ANLEITUNG.md`).
 
 ## Automatische Builds (GitHub Actions)
 
@@ -149,7 +148,7 @@ Unterhaltung X“; die App lädt den Rest von deinem Server. Die Abfrage alle 15
 Die App wird über [IzzyOnDroid](https://izzyondroid.org) verteilt: Das F-Droid-kompatible Repository übernimmt die
 signierte APK aus den GitHub-Releases. Titel, Beschreibungen und Bilder kommen aus `fastlane/metadata/android/`
 (Englisch und Deutsch), die Änderungshinweise aus `fastlane/metadata/android/*/changelogs/default.txt` –
-vor einem neuen Release dort kurz eintragen, was neu ist. Antrag: [`store/IZZYONDROID-ANTRAG.md`](store/IZZYONDROID-ANTRAG.md).
+vor einem neuen Release dort kurz eintragen, was neu ist. Antrag: `store/IZZYONDROID-ANTRAG.md` im Repo **globeswap-marketing**.
 
 Für F-Droid/IzzyOnDroid relevant:
 * keine proprietären Bibliotheken, keine Google-Dienste, keine Tracker oder Werbung

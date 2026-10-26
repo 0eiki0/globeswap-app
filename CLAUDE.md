@@ -27,9 +27,9 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
 - Push über Firebase ohne google-services-Plugin (Werte aus `GOOGLE_SERVICES_JSON` in Gradle gelesen).
 - Tests: `./gradlew testGithubDebugUnitTest` (Robolectric + Roborazzi). Bekannt: TextField in einem AlertDialog
   wird unter Robolectric nie idle – Formulare als eigene Composable herauslösen und direkt testen (siehe `RestoreForm`).
-- Store-Bilder: `store/make-store-images.mjs` (Playwright). Fastlane-Änderungshinweise
-  (`fastlane/metadata/android/*/changelogs/`) max. 500 Zeichen.
-- Werbevideos: `store/video/`.
+- Fastlane-Änderungshinweise (`fastlane/metadata/android/*/changelogs/`) max. 500 Zeichen.
+- Store-Grafiken, Screenshots für Google Play, Werbevideos und Texte liegen im Repo `0eiki0/globeswap-marketing`
+  (nicht hier). Rohe Screenshots dafür erzeugt hier der Test `StoreScreenshots` (`app/build/outputs/store-raw/`).
 
 ## Sandbox (Cloud-Umgebung)
 - Maven Central drosselt hier: `~/.gradle/init.d/central-mirror.gradle` mit dem Google-Mirror zuerst anlegen, falls fehlt.
