@@ -10,8 +10,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import tech.eiki.globeswap.R
 
 /**
  * Länderumrisse aus assets/world.txt (Natural Earth 1:110m, gemeinfrei), in Zehntelgrad einer
@@ -70,9 +72,10 @@ fun WorldMap(
             }
         }
     }
+    val desc = stringResource(R.string.map_desc, highlighted.size)
     Canvas(
         modifier.fillMaxWidth().aspectRatio(WorldShapes.WIDTH / WorldShapes.HEIGHT)
-            .semantics { contentDescription = "World map with ${highlighted.size} highlighted countries" },
+            .semantics { contentDescription = desc },
     ) {
         val scale = size.width / WorldShapes.WIDTH
         drawContext.transform.scale(scale, scale, pivot = androidx.compose.ui.geometry.Offset.Zero)

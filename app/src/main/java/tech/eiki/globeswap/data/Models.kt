@@ -1,6 +1,8 @@
 package tech.eiki.globeswap.data
 
+import androidx.annotation.StringRes
 import kotlinx.serialization.Serializable
+import tech.eiki.globeswap.R
 
 @Serializable
 data class Conversation(
@@ -22,7 +24,8 @@ data class Conversation(
 )
 
 /** Name der anderen Person zum Anzeigen: ihr freiwilliger Name oder "Stranger". */
-val Conversation.displayName: String get() = name.ifBlank { "Stranger" }
+/** Name der anderen Person oder [stranger] („Stranger“ in der Sprache der App), wenn sie keinen gesetzt hat. */
+fun Conversation.displayName(stranger: String): String = name.ifBlank { stranger }
 
 @Serializable
 data class Message(
@@ -104,10 +107,10 @@ internal data class MeResponse(val publicId: String)
 @Serializable
 internal data class ServerEvent(val type: String, val conversationId: String? = null, val photoId: String? = null)
 
-enum class ReportReason(val label: String) {
-    NUDITY("Nudity / sexual content"),
-    VIOLENCE("Violence / disturbing content"),
-    HARASSMENT("Harassment / hate"),
-    SPAM("Spam / advertising"),
-    OTHER("Something else"),
+enum class ReportReason(@StringRes val label: Int) {
+    NUDITY(R.string.reason_nudity),
+    VIOLENCE(R.string.reason_violence),
+    HARASSMENT(R.string.reason_harassment),
+    SPAM(R.string.reason_spam),
+    OTHER(R.string.reason_other),
 }

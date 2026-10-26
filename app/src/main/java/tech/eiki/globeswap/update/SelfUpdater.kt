@@ -11,6 +11,8 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.util.Log
+import java.io.File
+import java.security.MessageDigest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,11 +21,10 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import tech.eiki.globeswap.BuildConfig
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.InstallChannel
 import tech.eiki.globeswap.data.LatestRelease
 import tech.eiki.globeswap.data.ServiceLocator
-import java.io.File
-import java.security.MessageDigest
 
 /** Was beim Selbst-Update gerade passiert – die Oberfläche zeigt es im Update-Hinweis an. */
 sealed interface SelfUpdateState {
@@ -80,7 +81,7 @@ class SelfUpdater(
             withContext(Dispatchers.IO) { install(file) }
         } catch (e: Exception) {
             Log.w(TAG, "Selbst-Update", e)
-            _state.value = SelfUpdateState.Failed("The download didn't work. Please check your connection and try again.")
+            _state.value = SelfUpdateState.Failed(context.getString(R.string.upd_download_failed))
         }
     }
 
@@ -92,7 +93,7 @@ class SelfUpdater(
     }
 
     fun onInstallFinished(success: Boolean, message: String?) {
-        _state.value = if (success) SelfUpdateState.Idle else SelfUpdateState.Failed(message ?: "The update could not be installed.")
+        _state.value = if (success) SelfUpdateState.Idle else SelfUpdateState.Failed(message ?: context.getString(R.string.upd_install_failed))
     }
 
     fun reset() {
@@ -139,12 +140,12 @@ class SelfUpdater(
         fun verifyApk(context: Context, file: File, currentCode: Int): String? {
             val pm = context.packageManager
             val flags = PackageManager.GET_SIGNING_CERTIFICATES
-            val archive = pm.getPackageArchiveInfo(file.path, flags) ?: return "The downloaded file is not a valid app."
+            val archive = pm.getPackageArchiveInfo(file.path, flags) ?: return context.getString(R.string.upd_not_app)
             val installed = pm.getPackageInfo(context.packageName, flags)
             return when {
-                archive.packageName != context.packageName -> "The downloaded file is not GlobeSwap."
-                archive.longVersionCode <= currentCode -> "You already have this version."
-                signers(archive) != signers(installed) -> "The update is not signed by the GlobeSwap developer and was not installed."
+                archive.packageName != context.packageName -> context.getString(R.string.upd_not_globeswap)
+                archive.longVersionCode <= currentCode -> context.getString(R.string.upd_same_version)
+                signers(archive) != signers(installed) -> context.getString(R.string.upd_bad_signature)
                 else -> null
             }
         }

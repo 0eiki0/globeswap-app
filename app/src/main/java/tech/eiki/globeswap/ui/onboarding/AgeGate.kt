@@ -13,8 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Cake
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,6 +33,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -41,6 +42,7 @@ import java.time.Month
 import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
+import tech.eiki.globeswap.R
 
 const val MIN_AGE = 16
 
@@ -69,30 +71,30 @@ fun AgeGateScreen(onResult: (oldEnough: Boolean) -> Unit) {
         ) {
             Icon(Icons.Default.Cake, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
             Spacer(Modifier.height(16.dp))
-            Text("When were you born?", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.age_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(
-                "We only use this to check your age. It is not stored or sent anywhere.",
+                stringResource(R.string.age_text),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 8.dp, bottom = 24.dp),
             )
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Picker(
-                    label = "Day",
+                    label = stringResource(R.string.day),
                     value = day?.toString(),
                     options = (1..daysInMonth).map { it to it.toString() },
                     onPick = { day = it },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Picker(
-                    label = "Month",
+                    label = stringResource(R.string.month),
                     value = month?.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
                     options = (1..12).map { it to Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
                     onPick = { month = it },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Picker(
-                    label = "Year",
+                    label = stringResource(R.string.year),
                     value = year?.toString(),
                     options = (thisYear downTo thisYear - 100).map { it to it.toString() },
                     onPick = { year = it },
@@ -104,7 +106,7 @@ fun AgeGateScreen(onResult: (oldEnough: Boolean) -> Unit) {
                 onClick = { onResult(isOldEnough(LocalDate.of(year!!, month!!, day!!))) },
                 enabled = day != null && month != null && year != null,
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Continue") }
+            ) { Text(stringResource(R.string.continue_)) }
         }
     }
 }
@@ -142,9 +144,9 @@ fun TooYoungScreen() {
         ) {
             Icon(Icons.Default.Block, contentDescription = null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(56.dp))
             Spacer(Modifier.height(16.dp))
-            Text("Sorry!", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.sorry), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Text(
-                "GlobeSwap is only for people aged $MIN_AGE and over, because you swap photos with strangers.",
+                stringResource(R.string.too_young, MIN_AGE),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.padding(top = 8.dp),
             )

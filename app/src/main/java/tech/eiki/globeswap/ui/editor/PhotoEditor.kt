@@ -1,15 +1,8 @@
 package tech.eiki.globeswap.ui.editor
 
 import android.graphics.Bitmap
-import android.text.StaticLayout
-import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke as DrawStroke
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.semantics.stateDescription
 import android.graphics.BitmapFactory
+import android.text.StaticLayout
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -34,8 +27,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
@@ -55,6 +48,7 @@ import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.OpenInFull
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -81,29 +75,37 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke as DrawStroke
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.util.ImageUtils
-import kotlin.math.roundToInt
 
 private enum class Tool { NONE, DRAW, FILTER }
 
@@ -167,7 +169,7 @@ fun PhotoEditor(
 
                 Image(
                     bitmap = remember(source) { source.asImageBitmap() },
-                    contentDescription = "Photo",
+                    contentDescription = stringResource(R.string.photo),
                     contentScale = ContentScale.FillBounds,
                     colorFilter = state.filter.matrix?.let { ColorFilter.colorMatrix(ColorMatrix(it)) },
                     modifier = Modifier.fillMaxSize(),
@@ -212,11 +214,11 @@ fun PhotoEditor(
                             style = DrawStroke(width = 1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(14f, 10f))),
                         )
                     }
-                    FrameButton(box.corner(1f, 1f, pad), handleRadius, Icons.Default.OpenInFull, "Resize and rotate", MaterialTheme.colorScheme.primary)
-                    FrameButton(box.corner(-1f, -1f, pad), handleRadius, Icons.Default.Close, "Remove", Color(0xFFFF3B30))
+                    FrameButton(box.corner(1f, 1f, pad), handleRadius, Icons.Default.OpenInFull, stringResource(R.string.resize_rotate), MaterialTheme.colorScheme.primary)
+                    FrameButton(box.corner(-1f, -1f, pad), handleRadius, Icons.Default.Close, stringResource(R.string.remove), Color(0xFFFF3B30))
                     if (draggingSticker == null) {
                         Text(
-                            "Drag the corner or pinch with two fingers to resize & rotate",
+                            stringResource(R.string.resize_hint),
                             color = Color.White,
                             style = MaterialTheme.typography.labelMedium,
                             textAlign = TextAlign.Center,
@@ -360,7 +362,7 @@ fun PhotoEditor(
                             .background(if (armed) Color(0xFFFF3B30) else Color.Black.copy(alpha = 0.55f), CircleShape),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Default.Delete, contentDescription = "Drag here to delete", tint = Color.White)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.drag_to_delete), tint = Color.White)
                     }
                 }
             }
@@ -373,24 +375,24 @@ fun PhotoEditor(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.Top,
             ) {
-                RoundButton(Icons.Default.Close, "Discard photo", onClick = onRetake)
+                RoundButton(Icons.Default.Close, stringResource(R.string.discard_photo), onClick = onRetake)
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    RoundButton(Icons.Default.TextFields, "Add text") {
+                    RoundButton(Icons.Default.TextFields, stringResource(R.string.add_text)) {
                         tool = Tool.NONE
                         textEditing = TextDraft(null, "", Color.White)
                     }
-                    RoundButton(Icons.Default.Brush, "Draw", selected = tool == Tool.DRAW) {
+                    RoundButton(Icons.Default.Brush, stringResource(R.string.draw), selected = tool == Tool.DRAW) {
                         selectedId = null
                         tool = if (tool == Tool.DRAW) Tool.NONE else Tool.DRAW
                     }
-                    RoundButton(Icons.Default.EmojiEmotions, "Add sticker") {
+                    RoundButton(Icons.Default.EmojiEmotions, stringResource(R.string.add_sticker)) {
                         tool = Tool.NONE
                         showEmojis = true
                     }
-                    RoundButton(Icons.Default.AutoAwesome, "Filters", selected = tool == Tool.FILTER) {
+                    RoundButton(Icons.Default.AutoAwesome, stringResource(R.string.filters), selected = tool == Tool.FILTER) {
                         tool = if (tool == Tool.FILTER) Tool.NONE else Tool.FILTER
                     }
-                    if (state.canUndo) RoundButton(Icons.AutoMirrored.Filled.Undo, "Undo", onClick = state::undo)
+                    if (state.canUndo) RoundButton(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.undo), onClick = state::undo)
                 }
             }
 
@@ -405,7 +407,7 @@ fun PhotoEditor(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TextButton(onClick = onRetake) { Text("Retake", color = Color.White) }
+                    TextButton(onClick = onRetake) { Text(stringResource(R.string.retake), color = Color.White) }
                     Button(onClick = ::export, enabled = !exporting) {
                         if (exporting) {
                             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
@@ -465,7 +467,9 @@ private fun StickerView(sticker: Sticker, layout: StaticLayout, boxW: Float, box
     val density = LocalDensity.current
     val w = layout.width * sticker.scale
     val h = layout.height * sticker.scale
-    val kind = if (sticker.kind == StickerKind.TEXT) "Text" else "Sticker"
+    val kind = if (sticker.kind == StickerKind.TEXT) stringResource(R.string.kind_text) else stringResource(R.string.kind_sticker)
+    val desc = stringResource(R.string.sticker_desc, kind, sticker.text)
+    val stateDesc = stringResource(R.string.sticker_state, (sticker.scale * 100).roundToInt(), normalizedDegrees(sticker.rotation))
     Canvas(
         Modifier
             .offset {
@@ -476,8 +480,8 @@ private fun StickerView(sticker: Sticker, layout: StaticLayout, boxW: Float, box
             }
             .requiredSize(with(density) { w.toDp() }, with(density) { h.toDp() })
             .semantics {
-                contentDescription = "$kind: ${sticker.text}"
-                stateDescription = "Size ${(sticker.scale * 100).roundToInt()} %, rotated ${normalizedDegrees(sticker.rotation)}°"
+                contentDescription = desc
+                stateDescription = stateDesc
             }
             .graphicsLayer { rotationZ = sticker.rotation },
     ) {
@@ -590,7 +594,7 @@ private fun FilterPanel(thumbnail: Bitmap, selected: PhotoFilter, onSelect: (Pho
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onSelect(filter) }) {
                 Image(
                     bitmap = image,
-                    contentDescription = filter.label,
+                    contentDescription = stringResource(filter.label),
                     contentScale = ContentScale.Crop,
                     colorFilter = filter.matrix?.let { ColorFilter.colorMatrix(ColorMatrix(it)) },
                     modifier = Modifier
@@ -602,7 +606,7 @@ private fun FilterPanel(thumbnail: Bitmap, selected: PhotoFilter, onSelect: (Pho
                             RoundedCornerShape(12.dp),
                         ),
                 )
-                Text(filter.label, color = Color.White, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
+                Text(stringResource(filter.label), color = Color.White, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -626,7 +630,7 @@ private fun TextInput(draft: TextDraft, onDone: (String, Color) -> Unit) {
         TextButton(
             onClick = { onDone(text, color) },
             modifier = Modifier.align(Alignment.TopEnd).statusBarsPadding().padding(8.dp),
-        ) { Text("Done", color = Color.White, fontWeight = FontWeight.Bold) }
+        ) { Text(stringResource(R.string.done), color = Color.White, fontWeight = FontWeight.Bold) }
 
         BasicTextField(
             value = text,
@@ -637,7 +641,7 @@ private fun TextInput(draft: TextDraft, onDone: (String, Color) -> Unit) {
             decorationBox = { inner ->
                 Box(contentAlignment = Alignment.Center) {
                     if (text.isEmpty()) {
-                        Text("Type something…", color = Color.White.copy(alpha = 0.5f), fontSize = 30.sp, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.type_something), color = Color.White.copy(alpha = 0.5f), fontSize = 30.sp, fontWeight = FontWeight.Bold)
                     }
                     inner()
                 }

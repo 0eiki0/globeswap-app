@@ -38,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -46,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.userMessage
 
 /**
@@ -74,38 +76,37 @@ fun BackupCodeDialog(code: String, title: String, onDismiss: () -> Unit) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilledTonalButton(onClick = { copyCode(context, code) }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Default.ContentCopy, contentDescription = null)
-                        Text("Copy", Modifier.padding(start = 6.dp))
+                        Text(stringResource(R.string.copy), Modifier.padding(start = 6.dp))
                     }
                     FilledTonalButton(onClick = { shareCode(context, code) }, modifier = Modifier.weight(1f)) {
                         Icon(Icons.Default.Share, contentDescription = null)
-                        Text("Share", Modifier.padding(start = 6.dp))
+                        Text(stringResource(R.string.share), Modifier.padding(start = 6.dp))
                     }
                 }
                 Text(
-                    "Keep this code somewhere safe, like a password manager. With it you get your chats back after " +
-                        "reinstalling GlobeSwap – and so would anyone else who has it. We can't show it to you again.",
+                    stringResource(R.string.backup_keep_safe),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("I saved it") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.i_saved_it)) } },
     )
 }
 
 private fun copyCode(context: Context, code: String) {
-    val clip = ClipData.newPlainText("GlobeSwap backup code", code).apply {
+    val clip = ClipData.newPlainText(context.getString(R.string.backup_clip_label), code).apply {
         // Android 13+: Code nicht in der Kopier-Vorschau anzeigen.
         description.extras = PersistableBundle().apply { putBoolean(ClipDescription.EXTRA_IS_SENSITIVE, true) }
     }
     context.getSystemService(ClipboardManager::class.java).setPrimaryClip(clip)
-    Toast.makeText(context, "Backup code copied", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.backup_copied), Toast.LENGTH_SHORT).show()
 }
 
 private fun shareCode(context: Context, code: String) {
     val intent = Intent(Intent.ACTION_SEND).setType("text/plain")
-        .putExtra(Intent.EXTRA_TEXT, "GlobeSwap backup code: $code")
-    context.startActivity(Intent.createChooser(intent, "Save backup code"))
+        .putExtra(Intent.EXTRA_TEXT, context.getString(R.string.backup_share_text, code))
+    context.startActivity(Intent.createChooser(intent, context.getString(R.string.backup_save_chooser)))
 }
 
 /** Konto mit dem Code zurückholen (beim ersten Start nach einer Neuinstallation). */
@@ -114,9 +115,9 @@ fun RestoreDialog(restore: suspend (String) -> String, onRestored: (newCode: Str
     var busy by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = { if (!busy) onDismiss() },
-        title = { Text("Restore your account") },
+        title = { Text(stringResource(R.string.restore_title)) },
         text = { RestoreForm(restore, onRestored, onBusy = { busy = it }) },
-        confirmButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
@@ -128,11 +129,11 @@ fun RestoreForm(restore: suspend (String) -> String, onRestored: (newCode: Strin
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Enter the backup code you saved. Your chats, ID and world map come back.")
+        Text(stringResource(R.string.restore_text))
         OutlinedTextField(
             value = code,
             onValueChange = { code = it.uppercase().take(24); error = null },
-            label = { Text("Backup code") },
+            label = { Text(stringResource(R.string.backup_code)) },
             placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
             singleLine = true,
             isError = error != null,
@@ -161,7 +162,7 @@ fun RestoreForm(restore: suspend (String) -> String, onRestored: (newCode: Strin
             },
             modifier = Modifier.fillMaxWidth(),
         ) {
-            if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text("Restore")
+            if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else Text(stringResource(R.string.restore))
         }
     }
 }

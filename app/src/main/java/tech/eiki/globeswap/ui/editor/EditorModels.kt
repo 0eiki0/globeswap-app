@@ -1,11 +1,13 @@
 package tech.eiki.globeswap.ui.editor
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import tech.eiki.globeswap.R
 
 // Alle Positionen und Größen sind relativ zum Bild gespeichert (0..1), damit Vorschau
 // und das fertig gerenderte Foto in voller Auflösung exakt übereinstimmen.
@@ -58,15 +60,15 @@ val EditorEmojis = listOf(
 )
 
 /** Farbfilter als 4×5-Farbmatrix (gleiches Format für Compose und android.graphics). */
-enum class PhotoFilter(val label: String, val matrix: FloatArray?) {
-    ORIGINAL("Original", null),
-    VIVID("Vivid", saturation(1.6f)),
-    WARM("Warm", channels(r = 1.10f, g = 1.02f, b = 0.85f, offset = 8f)),
-    COOL("Cool", channels(r = 0.88f, g = 1.0f, b = 1.12f, offset = 4f)),
-    VINTAGE("Vintage", vintage()),
-    FADE("Fade", channels(r = 0.8f, g = 0.8f, b = 0.8f, offset = 34f)),
-    MONO("B&W", saturation(0f)),
-    NOIR("Noir", noir()),
+enum class PhotoFilter(@StringRes val label: Int, val matrix: FloatArray?) {
+    ORIGINAL(R.string.filter_original, null),
+    VIVID(R.string.filter_vivid, saturation(1.6f)),
+    WARM(R.string.filter_warm, channels(r = 1.10f, g = 1.02f, b = 0.85f, offset = 8f)),
+    COOL(R.string.filter_cool, channels(r = 0.88f, g = 1.0f, b = 1.12f, offset = 4f)),
+    VINTAGE(R.string.filter_vintage, vintage()),
+    FADE(R.string.filter_fade, channels(r = 0.8f, g = 0.8f, b = 0.8f, offset = 34f)),
+    MONO(R.string.filter_mono, saturation(0f)),
+    NOIR(R.string.filter_noir, noir()),
 }
 
 private const val LUM_R = 0.213f

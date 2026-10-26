@@ -26,6 +26,7 @@ import com.github.takahirom.roborazzi.captureRoboImage
 import com.github.takahirom.roborazzi.captureScreenRoboImage
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,6 +35,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import tech.eiki.globeswap.data.ApiException
 import tech.eiki.globeswap.data.MatchPref
+import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.UserSettings
 import tech.eiki.globeswap.data.World
@@ -55,6 +57,10 @@ import tech.eiki.globeswap.ui.world.WorldShapes
 class NewFeaturesTest {
     @get:Rule val compose = createComposeRule()
     private val context get() = ApplicationProvider.getApplicationContext<Application>()
+
+    /** Fehlermeldungen kommen aus den Sprachdateien und brauchen dafür den App-Kontext. */
+    @Before
+    fun setUp() = ServiceLocator.initForTest(context, "http://127.0.0.1:9")
 
     private fun messages(n: Int) = (1..n).map { i ->
         Message("m$i", mine = i % 2 == 0, photoId = "p$i", createdAt = 1_700_000_000_000 + i * 60_000L,
@@ -204,8 +210,8 @@ class NewFeaturesTest {
         }
         compose.onNodeWithText("Alice", substring = true).assertExists()
         val conversation = tech.eiki.globeswap.data.Conversation("c", "u", 0, false, "p", unread = false, blocked = false)
-        assertEquals("Stranger", conversation.displayName)
-        assertEquals("Alice", conversation.copy(name = "Alice").displayName)
+        assertEquals("Stranger", conversation.displayName("Stranger"))
+        assertEquals("Alice", conversation.copy(name = "Alice").displayName("Stranger"))
     }
 
     @Test

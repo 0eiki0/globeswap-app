@@ -20,10 +20,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.ui.camera.PhotoCapture
 
@@ -40,26 +42,25 @@ fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
 
     when (val s = state) {
         SwapUiState.Capturing -> PhotoCapture(
-            confirmLabel = "Swap!",
+            confirmLabel = stringResource(R.string.swap_confirm),
             onConfirm = vm::swap,
-            hint = "Take a photo – it goes to a stranger somewhere in the world, and you get theirs.",
+            hint = stringResource(R.string.swap_hint),
             theme = theme,
         )
-        SwapUiState.Sending -> StatusPanel(title = "Your photo is on its way…", loading = true)
+        SwapUiState.Sending -> StatusPanel(title = stringResource(R.string.swap_sending), loading = true)
         is SwapUiState.Waiting -> StatusPanel(
-            title = "Waiting for a stranger…",
-            text = "Nobody else is taking a photo right now. As soon as someone somewhere in the world does, " +
-                "you swap. Feel free to close the app – the swap will show up under Chats.",
+            title = stringResource(R.string.swap_waiting),
+            text = stringResource(R.string.swap_waiting_text),
             loading = true,
-            secondary = "Take back" to vm::cancelWaiting,
+            secondary = stringResource(R.string.take_back) to vm::cancelWaiting,
         )
         is SwapUiState.Failed -> StatusPanel(
-            title = "That didn't work",
+            title = stringResource(R.string.swap_failed),
             text = s.message,
-            primary = "Try again" to { vm.swap(s.jpeg) },
-            secondary = "New photo" to vm::reset,
+            primary = stringResource(R.string.try_again) to { vm.swap(s.jpeg) },
+            secondary = stringResource(R.string.new_photo) to vm::reset,
         )
-        is SwapUiState.Matched -> StatusPanel(title = "It's a match!", loading = true)
+        is SwapUiState.Matched -> StatusPanel(title = stringResource(R.string.its_a_match), loading = true)
     }
 }
 

@@ -22,10 +22,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import tech.eiki.globeswap.BuildConfig
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.ui.LegalLinks
 
 /** Version, eigene öffentliche UUID und Links zu Datenschutz, Nutzungsbedingungen, Impressum und Datenlöschung. */
@@ -35,11 +37,11 @@ fun AboutDialog(publicId: String?, onDismiss: () -> Unit) {
     val clipboard = LocalClipboardManager.current
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("About GlobeSwap") },
+        title = { Text(stringResource(R.string.about_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Version ${BuildConfig.VERSION_NAME} (build ${BuildConfig.VERSION_CODE})", style = MaterialTheme.typography.bodyMedium)
-                Text("Your ID", style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
+                Text(stringResource(R.string.about_version, BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE), style = MaterialTheme.typography.bodyMedium)
+                Text(stringResource(R.string.your_id), style = MaterialTheme.typography.labelLarge, modifier = Modifier.padding(top = 8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (publicId == null) {
                         CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
@@ -51,21 +53,21 @@ fun AboutDialog(publicId: String?, onDismiss: () -> Unit) {
                             modifier = Modifier.weight(1f),
                         )
                         IconButton(onClick = { clipboard.setText(AnnotatedString(publicId)) }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Copy ID")
+                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.copy_id))
                         }
                     }
                 }
                 Text(
-                    "Include this ID if you contact us about your data.",
+                    stringResource(R.string.id_hint),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 HorizontalDivider(Modifier.padding(vertical = 8.dp))
                 listOf(
-                    "Privacy Policy" to LegalLinks.privacy,
-                    "Terms of Use" to LegalLinks.terms,
-                    "Imprint" to LegalLinks.imprint,
-                    "Deleting your data" to LegalLinks.deleteAccount,
+                    stringResource(R.string.privacy_policy) to LegalLinks.privacy,
+                    stringResource(R.string.terms) to LegalLinks.terms,
+                    stringResource(R.string.imprint) to LegalLinks.imprint,
+                    stringResource(R.string.deleting_data) to LegalLinks.deleteAccount,
                 ).forEach { (label, url) ->
                     TextButton(onClick = { uri.openUri(url) }, modifier = Modifier.fillMaxWidth()) {
                         Text(label, modifier = Modifier.weight(1f))
@@ -74,6 +76,6 @@ fun AboutDialog(publicId: String?, onDismiss: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Close") } },
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) } },
     )
 }

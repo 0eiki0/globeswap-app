@@ -22,28 +22,30 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.TextButton
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.data.displayName
@@ -70,28 +72,28 @@ fun ConversationsScreen(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
-                title = { Text("Chats") },
+                title = { Text(stringResource(R.string.chats)) },
                 actions = {
-                    IconButton(onClick = onOpenWorld) { Icon(Icons.Default.Public, contentDescription = "Your world map") }
-                    IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = "More") }
+                    IconButton(onClick = onOpenWorld) { Icon(Icons.Default.Public, contentDescription = stringResource(R.string.your_world_map)) }
+                    IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more)) }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
-                            text = { Text("Settings") },
+                            text = { Text(stringResource(R.string.settings)) },
                             leadingIcon = { Icon(Icons.Default.Settings, contentDescription = null) },
                             onClick = { menuOpen = false; onOpenSettings() },
                         )
                         DropdownMenuItem(
-                            text = { Text("What's new") },
+                            text = { Text(stringResource(R.string.whats_new)) },
                             leadingIcon = { Icon(Icons.Default.NewReleases, contentDescription = null) },
                             onClick = { menuOpen = false; onOpenChangelog() },
                         )
                         DropdownMenuItem(
-                            text = { Text("About & privacy") },
+                            text = { Text(stringResource(R.string.about_privacy)) },
                             leadingIcon = { Icon(Icons.Default.Info, contentDescription = null) },
                             onClick = { menuOpen = false; showAbout = true; onAboutOpened() },
                         )
                         DropdownMenuItem(
-                            text = { Text("Delete my data") },
+                            text = { Text(stringResource(R.string.delete_my_data)) },
                             leadingIcon = { Icon(Icons.Default.DeleteForever, contentDescription = null) },
                             onClick = { menuOpen = false; confirmDelete = true },
                         )
@@ -103,18 +105,18 @@ fun ConversationsScreen(
         if (confirmDelete) {
             AlertDialog(
                 onDismissRequest = { confirmDelete = false },
-                title = { Text("Delete all your data?") },
-                text = { Text("All your chats and photos will be deleted from the server – for the other people too. This cannot be undone.") },
+                title = { Text(stringResource(R.string.delete_all_q)) },
+                text = { Text(stringResource(R.string.delete_all_text)) },
                 confirmButton = {
-                    TextButton(onClick = { confirmDelete = false; onDeleteAccount() }) { Text("Delete") }
+                    TextButton(onClick = { confirmDelete = false; onDeleteAccount() }) { Text(stringResource(R.string.delete)) }
                 },
-                dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Cancel") } },
+                dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text(stringResource(R.string.cancel)) } },
             )
         }
         if (conversations.isEmpty()) {
             Box(Modifier.fillMaxSize().padding(padding).padding(32.dp), contentAlignment = Alignment.Center) {
                 Text(
-                    "No swaps yet. Take a photo in the Swap tab to get started!",
+                    stringResource(R.string.no_swaps_yet),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -137,7 +139,7 @@ fun ConversationsScreen(
                     headlineContent = {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                listOf(conversation.displayName, Countries.flag(conversation.country)).filter { it.isNotEmpty() }.joinToString(" "),
+                                listOf(conversation.displayName(stringResource(R.string.stranger)), Countries.flag(conversation.country)).filter { it.isNotEmpty() }.joinToString(" "),
                                 fontWeight = if (unread) FontWeight.Bold else FontWeight.Normal,
                                 modifier = Modifier.weight(1f),
                             )
@@ -152,10 +154,10 @@ fun ConversationsScreen(
                     supportingContent = {
                         Text(
                             when {
-                                unread -> "New photo for you!"
-                                conversation.ended -> "Chat ended"
-                                conversation.lastFromMe -> "Waiting for their photo"
-                                else -> "Your turn"
+                                unread -> stringResource(R.string.new_photo_for_you)
+                                conversation.ended -> stringResource(R.string.chat_ended)
+                                conversation.lastFromMe -> stringResource(R.string.waiting_their_photo)
+                                else -> stringResource(R.string.your_turn)
                             },
                             color = if (unread) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         )

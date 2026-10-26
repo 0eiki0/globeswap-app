@@ -36,6 +36,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
@@ -56,6 +58,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.World
@@ -95,9 +98,9 @@ fun WorldScreen(onBack: () -> Unit, vm: WorldViewModel = viewModel()) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Your world") },
+                title = { Text(stringResource(R.string.your_world)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 },
             )
         },
@@ -106,8 +109,8 @@ fun WorldScreen(onBack: () -> Unit, vm: WorldViewModel = viewModel()) {
             when (val s = state) {
                 WorldViewModel.State.Loading -> CircularProgressIndicator(Modifier.align(Alignment.Center))
                 is WorldViewModel.State.Error -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("Could not load your map: ${s.message}")
-                    TextButton(onClick = vm::load) { Text("Try again") }
+                    Text(stringResource(R.string.map_load_failed, s.message))
+                    TextButton(onClick = vm::load) { Text(stringResource(R.string.try_again)) }
                 }
                 is WorldViewModel.State.Loaded -> WorldContent(s.world, s.shapes)
             }
@@ -122,9 +125,9 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
         item {
             Column(Modifier.padding(16.dp)) {
                 Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    BigNumber(countries.size, if (countries.size == 1) "country" else "countries")
-                    BigNumber(world.continents, if (world.continents == 1) "continent" else "continents")
-                    BigNumber(countries.sumOf { it.photos }, "photos received")
+                    BigNumber(countries.size, pluralStringResource(R.plurals.n_countries, countries.size))
+                    BigNumber(world.continents, pluralStringResource(R.plurals.n_continents, world.continents))
+                    BigNumber(countries.sumOf { it.photos }, stringResource(R.string.photos_received))
                 }
                 WorldMap(
                     shapes = shapes,
@@ -137,7 +140,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
                 )
                 world.percentile?.let { p ->
                     Text(
-                        "You've seen more of the world than $p% of GlobeSwap users.",
+                        stringResource(R.string.percentile, p),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.primary,
@@ -146,7 +149,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
                 }
                 if (countries.isEmpty()) {
                     Text(
-                        "Your map is still empty. Every photo you get from a stranger colors in their country.",
+                        stringResource(R.string.map_empty),
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
@@ -157,7 +160,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
         val badges = achievements(world)
         item(key = "badges-title") {
             Text(
-                "Achievements · ${badges.count { it.unlocked }} of ${badges.size}",
+                stringResource(R.string.achievements_count, badges.count { it.unlocked }, badges.size),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
@@ -167,7 +170,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
         if (countries.isNotEmpty()) {
             item(key = "countries-title") {
                 Text(
-                    "Countries",
+                    stringResource(R.string.countries_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 4.dp),
@@ -178,22 +181,22 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
             ListItem(
                 leadingContent = { Text(Countries.flag(c.country), fontSize = 28.sp) },
                 headlineContent = { Text(Countries.name(c.country)) },
-                supportingContent = { Text(Countries.continent(c.continent)) },
-                trailingContent = { Text(if (c.photos == 1) "1 photo" else "${c.photos} photos") },
+                supportingContent = { Text(Countries.continent(c.continent)?.let { stringResource(it) }.orEmpty()) },
+                trailingContent = { Text(pluralStringResource(R.plurals.n_photos, c.photos, c.photos)) },
             )
             HorizontalDivider(Modifier.padding(horizontal = 16.dp))
         }
         item {
             Text(
                 buildAnnotatedString {
-                    append("Countries are worked out from IP addresses on our server (")
+                    append(stringResource(R.string.geo_note_1))
                     withLink(
                         LinkAnnotation.Url(
                             "https://db-ip.com",
                             TextLinkStyles(SpanStyle(color = MaterialTheme.colorScheme.primary, textDecoration = TextDecoration.Underline)),
                         ),
                     ) { append("IP Geolocation by DB-IP") }
-                    append("). Map: Natural Earth. People who switched off their country don't appear here.")
+                    append(stringResource(R.string.geo_note_2))
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -213,6 +216,10 @@ private fun BigNumber(value: Int, label: String) {
 
 @Composable
 internal fun AchievementRow(a: Achievement) {
+    // Zahl oder Kontinent in Titel und Beschreibung einsetzen (überzählige Werte ignoriert der Formatierer)
+    val arg: Any = a.place?.let { stringResource(it) } ?: a.number ?: ""
+    val title = stringResource(a.title, arg)
+    val description = stringResource(a.description, arg)
     ListItem(
         modifier = Modifier.alpha(if (a.unlocked) 1f else 0.55f),
         leadingContent = {
@@ -222,10 +229,10 @@ internal fun AchievementRow(a: Achievement) {
                 contentAlignment = Alignment.Center,
             ) { Text(if (a.unlocked) a.emoji else "🔒", fontSize = 22.sp) }
         },
-        headlineContent = { Text(a.title, fontWeight = if (a.unlocked) FontWeight.SemiBold else FontWeight.Normal) },
+        headlineContent = { Text(title, fontWeight = if (a.unlocked) FontWeight.SemiBold else FontWeight.Normal) },
         supportingContent = {
             Column {
-                Text(a.description)
+                Text(description)
                 if (!a.unlocked && a.goal > 1) {
                     LinearProgressIndicator(
                         progress = { a.progress.toFloat() / a.goal },

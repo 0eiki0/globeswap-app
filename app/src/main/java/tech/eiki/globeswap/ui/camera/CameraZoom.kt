@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -28,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.atan
+import tech.eiki.globeswap.R
 
 /** Zoomstufen als Knöpfe: Weitwinkel (unter 1×, wenn vorhanden), 1×, 2×, 5×, 10× – soweit das Handy sie kann. */
 fun zoomPresets(min: Float, max: Float, separateWide: Boolean = false): List<Float> = buildList {
@@ -92,12 +94,13 @@ fun ZoomChips(presets: List<Float>, current: Float, onSelect: (Float) -> Unit, m
         presets.forEach { preset ->
             val selected = preset == active
             val label = if (selected) "${formatZoom(current)}×" else formatZoom(preset)
+            val desc = stringResource(R.string.zoom_desc, formatZoom(preset))
             Box(
                 Modifier
                     .size(if (selected) 44.dp else 36.dp)
                     .background(if (selected) Color.White.copy(alpha = 0.25f) else Color.Transparent, CircleShape)
                     .clickable { onSelect(preset) }
-                    .semantics { contentDescription = "Zoom ${formatZoom(preset)}×"; this.selected = selected },
+                    .semantics { contentDescription = desc; this.selected = selected },
                 contentAlignment = Alignment.Center,
             ) {
                 Text(

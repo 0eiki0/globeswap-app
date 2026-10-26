@@ -2,8 +2,8 @@ package tech.eiki.globeswap.ui.chat
 
 import android.text.format.DateUtils
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,8 +33,8 @@ import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DoNotDisturbOn
-import androidx.compose.material.icons.filled.HideImage
 import androidx.compose.material.icons.filled.Flag
+import androidx.compose.material.icons.filled.HideImage
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -64,6 +64,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -74,10 +75,11 @@ import androidx.compose.ui.window.SecureFlagPolicy
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Countries
-import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.data.Message
 import tech.eiki.globeswap.data.ReportReason
+import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.ui.StrangerId
 import tech.eiki.globeswap.ui.camera.PhotoCapture
 
@@ -115,10 +117,10 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
 
     if (replying) {
         PhotoCapture(
-            confirmLabel = "Reply",
+            confirmLabel = stringResource(R.string.reply),
             onConfirm = { vm.reply(it); replying = false },
             onCancel = { replying = false },
-            hint = "Reply with a photo",
+            hint = stringResource(R.string.reply_with_photo),
             modifier = Modifier.navigationBarsPadding(),
         )
         return
@@ -131,37 +133,37 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(listOf(conversation?.displayName ?: "Stranger", Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
+                        Text(listOf(conversation?.displayName(stringResource(R.string.stranger)) ?: stringResource(R.string.stranger), Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
                         StrangerId(conversation?.label.orEmpty())
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
-                    IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = "More") }
+                    IconButton(onClick = { menuOpen = true }) { Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more)) }
                     DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                         DropdownMenuItem(
-                            text = { Text("Report") },
+                            text = { Text(stringResource(R.string.report)) },
                             leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) },
                             onClick = { menuOpen = false; reportTarget = ReportTarget(null) },
                         )
                         DropdownMenuItem(
-                            text = { Text("Block") },
+                            text = { Text(stringResource(R.string.block)) },
                             leadingIcon = { Icon(Icons.Default.Block, contentDescription = null) },
                             onClick = { menuOpen = false; confirmBlock = true },
                         )
                         if (conversation?.ended == false) {
                             DropdownMenuItem(
-                                text = { Text("End chat") },
+                                text = { Text(stringResource(R.string.end_chat)) },
                                 leadingIcon = { Icon(Icons.Default.DoNotDisturbOn, contentDescription = null) },
                                 onClick = { menuOpen = false; confirmEndChat = true },
                             )
                         }
                         DropdownMenuItem(
-                            text = { Text("Delete chat") },
+                            text = { Text(stringResource(R.string.delete_chat)) },
                             leadingIcon = { Icon(Icons.Default.Delete, contentDescription = null) },
                             enabled = loaded != null,
                             onClick = { menuOpen = false; confirmDeleteChat = true },
@@ -174,9 +176,9 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             Box(Modifier.fillMaxWidth().navigationBarsPadding().padding(16.dp), contentAlignment = Alignment.Center) {
                 when {
                     state == ChatViewModel.DetailState.Missing ->
-                        Text("This chat no longer exists.", color = MaterialTheme.colorScheme.error)
+                        Text(stringResource(R.string.chat_gone), color = MaterialTheme.colorScheme.error)
                     state == ChatViewModel.DetailState.Loading -> CircularProgressIndicator()
-                    blocked -> Text("This chat is blocked.", color = MaterialTheme.colorScheme.error)
+                    blocked -> Text(stringResource(R.string.err_blocked), color = MaterialTheme.colorScheme.error)
                     conversation?.ended == true -> ChatEnded(byMe = conversation.endedByMe, otherName = conversation.name)
                     sending -> CircularProgressIndicator()
                     // Immer im Wechsel: erst wieder antworten, wenn das Gegenüber ein Foto geschickt hat.
@@ -184,7 +186,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
                     else -> Button(onClick = { replying = true }, modifier = Modifier.fillMaxWidth()) {
                         Icon(Icons.Default.CameraAlt, contentDescription = null)
                         Spacer(Modifier.size(8.dp))
-                        Text("Reply with a photo")
+                        Text(stringResource(R.string.reply_with_photo))
                     }
                 }
             }
@@ -216,12 +218,12 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     deleteTarget?.let { message ->
         AlertDialog(
             onDismissRequest = { deleteTarget = null },
-            title = { Text("Delete this photo?") },
-            text = { Text("It will be removed for both of you.") },
+            title = { Text(stringResource(R.string.delete_photo_q)) },
+            text = { Text(stringResource(R.string.delete_photo_text)) },
             confirmButton = {
-                TextButton(onClick = { deleteTarget = null; vm.deletePhoto(message.id) }) { Text("Delete") }
+                TextButton(onClick = { deleteTarget = null; vm.deletePhoto(message.id) }) { Text(stringResource(R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { deleteTarget = null }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
@@ -236,22 +238,22 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     if (confirmEndChat) {
         AlertDialog(
             onDismissRequest = { confirmEndChat = false },
-            title = { Text("End this chat?") },
-            text = { Text("Neither of you can send more photos. The chat stays visible, and you might meet again in a future swap.") },
-            confirmButton = { TextButton(onClick = { confirmEndChat = false; vm.endChat() }) { Text("End chat") } },
-            dismissButton = { TextButton(onClick = { confirmEndChat = false }) { Text("Cancel") } },
+            title = { Text(stringResource(R.string.end_chat_q)) },
+            text = { Text(stringResource(R.string.end_chat_text)) },
+            confirmButton = { TextButton(onClick = { confirmEndChat = false; vm.endChat() }) { Text(stringResource(R.string.end_chat)) } },
+            dismissButton = { TextButton(onClick = { confirmEndChat = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
     if (confirmDeleteChat) {
         AlertDialog(
             onDismissRequest = { confirmDeleteChat = false },
-            title = { Text("Delete this chat?") },
-            text = { Text("The chat and all its photos will be deleted for both of you. This can't be undone.") },
+            title = { Text(stringResource(R.string.delete_chat_q)) },
+            text = { Text(stringResource(R.string.delete_chat_text)) },
             confirmButton = {
-                TextButton(onClick = { confirmDeleteChat = false; vm.deleteChat(onDeleted = onBack) }) { Text("Delete") }
+                TextButton(onClick = { confirmDeleteChat = false; vm.deleteChat(onDeleted = onBack) }) { Text(stringResource(R.string.delete)) }
             },
-            dismissButton = { TextButton(onClick = { confirmDeleteChat = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmDeleteChat = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 
@@ -268,12 +270,12 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     if (confirmBlock) {
         AlertDialog(
             onDismissRequest = { confirmBlock = false },
-            title = { Text("Block this person?") },
-            text = { Text("You will never get each other's photos again and this chat will be hidden.") },
+            title = { Text(stringResource(R.string.block_q)) },
+            text = { Text(stringResource(R.string.block_text)) },
             confirmButton = {
-                TextButton(onClick = { confirmBlock = false; vm.block(onBlocked = onBack) }) { Text("Block") }
+                TextButton(onClick = { confirmBlock = false; vm.block(onBlocked = onBack) }) { Text(stringResource(R.string.block)) }
             },
-            dismissButton = { TextButton(onClick = { confirmBlock = false }) { Text("Cancel") } },
+            dismissButton = { TextButton(onClick = { confirmBlock = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
 }
@@ -345,7 +347,7 @@ internal fun ReactionBadge(emoji: String, modifier: Modifier = Modifier) {
 internal fun ReactionPicker(current: String, onPick: (String) -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("React to this photo") },
+        title = { Text(stringResource(R.string.react_title)) },
         text = {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 REACTIONS.forEach { emoji ->
@@ -361,18 +363,18 @@ internal fun ReactionPicker(current: String, onPick: (String) -> Unit, onDismiss
             }
         },
         confirmButton = {
-            if (current.isNotEmpty()) TextButton(onClick = { onPick(current) }) { Text("Remove reaction") }
+            if (current.isNotEmpty()) TextButton(onClick = { onPick(current) }) { Text(stringResource(R.string.remove_reaction)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }
 
 @Composable
 internal fun ChatEnded(byMe: Boolean, otherName: String = "") {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(if (byMe) "You ended this chat" else "${otherName.ifBlank { "The stranger" }} ended this chat", style = MaterialTheme.typography.titleSmall)
+        Text(if (byMe) stringResource(R.string.chat_ended_by_you) else stringResource(R.string.chat_ended_by_other, otherName.ifBlank { stringResource(R.string.the_stranger) }), style = MaterialTheme.typography.titleSmall)
         Text(
-            "No more photos can be sent here. Take a new photo to meet someone else.",
+            stringResource(R.string.chat_ended_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
@@ -401,7 +403,7 @@ internal fun DeletedPhoto(message: Message) {
                 modifier = Modifier.size(16.dp),
             )
             Text(
-                if (message.mine) "You deleted a photo" else "The stranger deleted a photo",
+                if (message.mine) stringResource(R.string.you_deleted_photo) else stringResource(R.string.stranger_deleted_photo),
                 style = MaterialTheme.typography.labelMedium,
                 fontStyle = FontStyle.Italic,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -415,7 +417,7 @@ internal fun DeletedPhoto(message: Message) {
 @Composable
 internal fun PhotoLimitHint(maxPhotos: Int) {
     Text(
-        "Only the latest $maxPhotos photos are kept – older ones disappear for both of you.",
+        stringResource(R.string.photo_limit, maxPhotos),
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -426,9 +428,9 @@ internal fun PhotoLimitHint(maxPhotos: Int) {
 @Composable
 private fun WaitingForReply() {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text("Waiting for the stranger's photo", style = MaterialTheme.typography.titleSmall)
+        Text(stringResource(R.string.waiting_turn_title), style = MaterialTheme.typography.titleSmall)
         Text(
-            "You take turns – you can reply once they've sent one.",
+            stringResource(R.string.waiting_turn_text),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -453,7 +455,7 @@ internal fun PhotoBubble(
         Box(Modifier.fillMaxWidth(0.8f)) {
             AsyncImage(
                 model = url,
-                contentDescription = if (mine) "Your photo" else "Stranger's photo",
+                contentDescription = if (mine) stringResource(R.string.your_photo) else stringResource(R.string.strangers_photo),
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -471,7 +473,7 @@ internal fun PhotoBubble(
         }
         Text(
             buildString {
-                append(if (mine) "You" else otherName.ifBlank { "Stranger" })
+                append(if (mine) stringResource(R.string.you) else otherName.ifBlank { stringResource(R.string.stranger) })
                 if (!mine && message.country.isNotEmpty()) append(" · ").append(Countries.label(message.country))
                 append(" · ").append(DateUtils.getRelativeTimeSpanString(message.createdAt))
             },
@@ -500,15 +502,15 @@ private fun PhotoViewer(url: String, mine: Boolean, onDismiss: () -> Unit, onRep
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 IconButton(onClick = onDismiss) {
-                    Icon(Icons.Default.Close, contentDescription = "Close", tint = Color.White)
+                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.close), tint = Color.White)
                 }
                 if (mine) {
                     IconButton(onClick = onDelete) {
-                        Icon(Icons.Default.Delete, contentDescription = "Delete photo", tint = Color.White)
+                        Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_photo), tint = Color.White)
                     }
                 } else {
                     IconButton(onClick = onReport) {
-                        Icon(Icons.Default.Flag, contentDescription = "Report photo", tint = Color.White)
+                        Icon(Icons.Default.Flag, contentDescription = stringResource(R.string.report_photo), tint = Color.White)
                     }
                 }
             }
@@ -522,7 +524,7 @@ private fun ReportDialog(onDismiss: () -> Unit, onSubmit: (ReportReason, Boolean
     var alsoBlock by remember { mutableStateOf(true) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Report") },
+        title = { Text(stringResource(R.string.report)) },
         text = {
             Column {
                 ReportReason.entries.forEach { option ->
@@ -531,7 +533,7 @@ private fun ReportDialog(onDismiss: () -> Unit, onSubmit: (ReportReason, Boolean
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         RadioButton(selected = reason == option, onClick = null)
-                        Text(option.label, Modifier.padding(start = 8.dp, top = 8.dp, bottom = 8.dp))
+                        Text(stringResource(option.label), Modifier.padding(start = 8.dp, top = 8.dp, bottom = 8.dp))
                     }
                 }
                 Row(
@@ -539,11 +541,11 @@ private fun ReportDialog(onDismiss: () -> Unit, onSubmit: (ReportReason, Boolean
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Checkbox(checked = alsoBlock, onCheckedChange = null)
-                    Text("Also block this person", Modifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp))
+                    Text(stringResource(R.string.also_block), Modifier.padding(start = 8.dp, top = 12.dp, bottom = 12.dp))
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { onSubmit(reason, alsoBlock) }) { Text("Report") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { onSubmit(reason, alsoBlock) }) { Text(stringResource(R.string.report)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
     )
 }

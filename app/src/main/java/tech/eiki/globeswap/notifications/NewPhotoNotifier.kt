@@ -60,7 +60,7 @@ object NewPhotoNotifier {
     }
 
     fun createChannel(context: Context) {
-        val channel = NotificationChannel(CHANNEL_ID, "New photos", NotificationManager.IMPORTANCE_DEFAULT)
+        val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.notif_channel), NotificationManager.IMPORTANCE_DEFAULT)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
@@ -81,8 +81,8 @@ object NewPhotoNotifier {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(if (count == 1) "New photo for you" else "$count new photos for you")
-            .setContentText("Someone somewhere in the world sent you a photo.")
+            .setContentTitle(context.resources.getQuantityString(R.plurals.notif_title, count, count))
+            .setContentText(context.getString(R.string.notif_text))
             .setContentIntent(intent)
             .setAutoCancel(true)
             .build()

@@ -36,14 +36,16 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.unit.dp
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.ui.LegalLinks
 import tech.eiki.globeswap.ui.settings.BackupCodeDialog
@@ -71,7 +73,7 @@ fun OnboardingScreen(
     }
     restoredCode?.let { code ->
         // Willkommen zurück: der alte Code gilt nicht mehr, also gleich den neuen sichern lassen.
-        BackupCodeDialog(code, "Welcome back! Your new backup code", onDismiss = { restoredCode = null; accept() })
+        BackupCodeDialog(code, stringResource(R.string.welcome_back_code), onDismiss = { restoredCode = null; accept() })
     }
     Surface(Modifier.fillMaxSize()) {
         Column(
@@ -80,13 +82,12 @@ fun OnboardingScreen(
         ) {
             Spacer(Modifier.height(24.dp))
             Text("GlobeSwap", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Bold)
-            Text("Swap photos with strangers all over the world. No sign-up needed.")
-            Step(Icons.Default.CameraAlt, "Take a photo of whatever you see right now.")
-            Step(Icons.Default.SwapHoriz, "It goes to someone somewhere in the world who took a photo at the same time – and you get theirs.")
-            Step(Icons.Default.Forum, "Reply with a photo and start a conversation made only of pictures.")
+            Text(stringResource(R.string.onb_intro))
+            Step(Icons.Default.CameraAlt, stringResource(R.string.onb_step1))
+            Step(Icons.Default.SwapHoriz, stringResource(R.string.onb_step2))
+            Step(Icons.Default.Forum, stringResource(R.string.onb_step3))
             Text(
-                "Rules: no nudity, no violence, no harassment, no personal information. " +
-                    "You can report inappropriate photos and block people at any time.",
+                stringResource(R.string.onb_rules),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -95,24 +96,24 @@ fun OnboardingScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Checkbox(checked = accepted, onCheckedChange = null)
-                Text("I will follow the rules.", Modifier.padding(start = 12.dp))
+                Text(stringResource(R.string.onb_follow_rules), Modifier.padding(start = 12.dp))
             }
             Text(
                 buildAnnotatedString {
-                    append("By continuing you agree to the ")
-                    withLink(LinkAnnotation.Url(LegalLinks.terms, linkStyle())) { append("Terms of Use") }
-                    append(" and acknowledge the ")
-                    withLink(LinkAnnotation.Url(LegalLinks.privacy, linkStyle())) { append("Privacy Policy") }
-                    append(".")
+                    append(stringResource(R.string.onb_agree_1))
+                    withLink(LinkAnnotation.Url(LegalLinks.terms, linkStyle())) { append(stringResource(R.string.terms)) }
+                    append(stringResource(R.string.onb_agree_2))
+                    withLink(LinkAnnotation.Url(LegalLinks.privacy, linkStyle())) { append(stringResource(R.string.privacy_policy)) }
+                    append(stringResource(R.string.onb_agree_3))
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Button(onClick = accept, enabled = accepted, modifier = Modifier.fillMaxWidth()) {
-                Text("Let's go")
+                Text(stringResource(R.string.lets_go))
             }
             TextButton(onClick = { restoring = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Used GlobeSwap before? Restore with backup code")
+                Text(stringResource(R.string.onb_restore))
             }
         }
     }

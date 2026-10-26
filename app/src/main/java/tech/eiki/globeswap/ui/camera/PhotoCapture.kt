@@ -23,7 +23,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,17 +30,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.FlashOff
 import androidx.compose.material.icons.filled.FlashOn
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.FlipCameraAndroid
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -65,23 +65,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import tech.eiki.globeswap.ui.editor.PhotoEditor
-import tech.eiki.globeswap.util.ImageUtils
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import kotlin.math.roundToInt
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.ui.editor.PhotoEditor
+import tech.eiki.globeswap.util.ImageUtils
 
 /**
  * Vollbild-Kamera, danach der Editor (Text, Zeichnen, Sticker, Filter). [onConfirm] erhält das fertige JPEG.
@@ -120,7 +122,7 @@ fun PhotoCapture(
         }
         if (onCancel != null && photo == null) {
             IconButton(onClick = onCancel, modifier = Modifier.statusBarsPadding().padding(8.dp)) {
-                Icon(Icons.Default.Close, contentDescription = "Cancel", tint = Color.White)
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel), tint = Color.White)
             }
         }
     }
@@ -224,7 +226,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
 
                 override fun onError(exception: ImageCaptureException) {
                     busy = false
-                    Toast.makeText(context, "Could not take photo: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, context.getString(R.string.photo_failed, exception.message.orEmpty()), Toast.LENGTH_SHORT).show()
                 }
             },
         )
@@ -270,7 +272,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
             IconButton(onClick = { flashOn = !flashOn }) {
                 Icon(
                     if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                    contentDescription = "Flash",
+                    contentDescription = stringResource(R.string.flash),
                     tint = Color.White,
                 )
             }
@@ -322,7 +324,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
                         CameraSelector.LENS_FACING_BACK
                     }
                 }) {
-                    Icon(Icons.Default.FlipCameraAndroid, contentDescription = "Switch camera", tint = Color.White)
+                    Icon(Icons.Default.FlipCameraAndroid, contentDescription = stringResource(R.string.switch_camera), tint = Color.White)
                 }
             }
         }
@@ -337,12 +339,12 @@ private fun PermissionMissing(onRequest: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            "GlobeSwap needs access to your camera so you can swap photos.",
+            stringResource(R.string.camera_needed),
             color = Color.White,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.size(16.dp))
-        Button(onClick = onRequest) { Text("Allow camera") }
+        Button(onClick = onRequest) { Text(stringResource(R.string.allow_camera)) }
     }
 }
 
@@ -355,7 +357,7 @@ internal fun DailyTheme(theme: String, modifier: Modifier = Modifier) {
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("TODAY'S THEME", color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelSmall)
+        Text(stringResource(R.string.todays_theme), color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelSmall)
         Text(theme, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
     }
 }

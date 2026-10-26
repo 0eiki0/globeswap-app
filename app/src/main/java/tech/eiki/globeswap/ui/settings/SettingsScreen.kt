@@ -36,6 +36,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -45,6 +46,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.data.MatchPref
 import tech.eiki.globeswap.data.ServiceLocator
@@ -112,13 +114,13 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
     val error by vm.error.collectAsStateWithLifecycle()
     val backupCode by vm.backupCode.collectAsStateWithLifecycle()
     val nameError by vm.nameError.collectAsStateWithLifecycle()
-    backupCode?.let { BackupCodeDialog(it, "Your backup code", onDismiss = vm::backupCodeShown) }
+    backupCode?.let { BackupCodeDialog(it, stringResource(R.string.your_backup_code), onDismiss = vm::backupCodeShown) }
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Settings") },
+                title = { Text(stringResource(R.string.settings)) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") }
+                    IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) }
                 },
             )
         },
@@ -128,8 +130,8 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
             when {
                 s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode, vm::setName, nameError)
                 error != null -> Column(Modifier.padding(24.dp)) {
-                    Text("Could not load your settings: $error")
-                    TextButton(onClick = vm::load) { Text("Try again") }
+                    Text(stringResource(R.string.settings_load_failed, error.orEmpty()))
+                    TextButton(onClick = vm::load) { Text(stringResource(R.string.try_again)) }
                 }
                 else -> Row(Modifier.fillMaxWidth().padding(48.dp)) { CircularProgressIndicator() }
             }
@@ -151,31 +153,31 @@ internal fun SettingsContent(
     if (confirmNewCode) {
         AlertDialog(
             onDismissRequest = { confirmNewCode = false },
-            title = { Text("Create a new backup code?") },
-            text = { Text("Your old backup code will stop working.") },
-            confirmButton = { TextButton(onClick = { confirmNewCode = false; onCreateBackupCode() }) { Text("Create") } },
-            dismissButton = { TextButton(onClick = { confirmNewCode = false }) { Text("Cancel") } },
+            title = { Text(stringResource(R.string.new_code_q)) },
+            text = { Text(stringResource(R.string.new_code_text)) },
+            confirmButton = { TextButton(onClick = { confirmNewCode = false; onCreateBackupCode() }) { Text(stringResource(R.string.create)) } },
+            dismissButton = { TextButton(onClick = { confirmNewCode = false }) { Text(stringResource(R.string.cancel)) } },
         )
     }
-    SectionTitle("Your name")
+    SectionTitle(stringResource(R.string.your_name))
     NameEditor(settings.displayName, onSetName, nameError)
     HorizontalDivider(Modifier.padding(top = 8.dp))
 
-    SectionTitle("Your country")
+    SectionTitle(stringResource(R.string.your_country))
     Row(
         Modifier.fillMaxWidth().clickable(enabled = settings.geoEnabled) { onShareCountry(!settings.shareCountry) }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f).padding(end = 16.dp)) {
-            Text("Show my country", style = MaterialTheme.typography.bodyLarge)
+            Text(stringResource(R.string.show_my_country), style = MaterialTheme.typography.bodyLarge)
             Text(
                 when {
-                    !settings.geoEnabled -> "Not available on this server."
+                    !settings.geoEnabled -> stringResource(R.string.country_unavailable)
                     settings.shareCountry && settings.country.isNotEmpty() ->
-                        "Strangers see “${Countries.label(settings.country)}” with your photos. Only the country, never your location."
-                    settings.shareCountry -> "Strangers see your country with your photos. Only the country, never your location."
-                    else -> "Your photos are sent without a country. It was also removed from photos you already sent."
+                        stringResource(R.string.country_shown_as, Countries.label(settings.country))
+                    settings.shareCountry -> stringResource(R.string.country_shown)
+                    else -> stringResource(R.string.country_hidden)
                 },
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -185,12 +187,12 @@ internal fun SettingsContent(
     }
     HorizontalDivider()
 
-    SectionTitle("Swap with")
+    SectionTitle(stringResource(R.string.swap_with))
     val canPrefer = settings.geoEnabled && settings.shareCountry
     listOf(
-        MatchPref.ANY to ("Anyone" to "The next photo, wherever it comes from."),
-        MatchPref.NEAR to ("Nearby" to "Prefer people on your continent."),
-        MatchPref.FAR to ("Far away" to "Prefer people on other continents."),
+        MatchPref.ANY to (stringResource(R.string.pref_any) to stringResource(R.string.pref_any_text)),
+        MatchPref.NEAR to (stringResource(R.string.pref_near) to stringResource(R.string.pref_near_text)),
+        MatchPref.FAR to (stringResource(R.string.pref_far) to stringResource(R.string.pref_far_text)),
     ).forEach { (value, texts) ->
         val enabled = canPrefer || value == MatchPref.ANY
         Row(
@@ -208,9 +210,9 @@ internal fun SettingsContent(
     }
     Text(
         if (canPrefer) {
-            "This is a preference: if nobody fitting is waiting, you get the next photo anyway, so you never wait longer."
+            stringResource(R.string.pref_hint)
         } else {
-            "Turn on “Show my country” to choose nearby or far away."
+            stringResource(R.string.pref_needs_country)
         },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -218,12 +220,12 @@ internal fun SettingsContent(
     )
     HorizontalDivider(Modifier.padding(top = 12.dp))
 
-    SectionTitle("Backup code")
+    SectionTitle(stringResource(R.string.backup_code))
     Text(
         if (settings.hasRecoveryCode) {
-            "You have a backup code. With it you get your chats back after reinstalling the app. Lost it? Create a new one."
+            stringResource(R.string.backup_have)
         } else {
-            "Reinstalling the app or getting a new phone? With a backup code you get your chats, ID and world map back."
+            stringResource(R.string.backup_none)
         },
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -232,9 +234,9 @@ internal fun SettingsContent(
     TextButton(
         onClick = { if (settings.hasRecoveryCode) confirmNewCode = true else onCreateBackupCode() },
         modifier = Modifier.padding(horizontal = 8.dp),
-    ) { Text(if (settings.hasRecoveryCode) "Create new backup code" else "Create backup code") }
+    ) { Text(if (settings.hasRecoveryCode) stringResource(R.string.backup_create_new) else stringResource(R.string.backup_create)) }
     HorizontalDivider(Modifier.padding(top = 4.dp))
-    TextButton(onClick = onOpenWorld, modifier = Modifier.padding(8.dp)) { Text("Open your world map") }
+    TextButton(onClick = onOpenWorld, modifier = Modifier.padding(8.dp)) { Text(stringResource(R.string.open_world_map)) }
 }
 
 @Composable
@@ -253,25 +255,24 @@ internal fun NameEditor(current: String, onSetName: (String) -> Unit, error: Str
     var text by rememberSaveable(current) { mutableStateOf(current) }
     Column(Modifier.padding(horizontal = 16.dp)) {
         Text(
-            "Optional. People you chat with see it instead of “Stranger” – your ID stays the same. " +
-                "Better not use your full real name.",
+            stringResource(R.string.name_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         OutlinedTextField(
             value = text,
             onValueChange = { text = it.take(24) },
-            label = { Text("Name") },
-            placeholder = { Text("Stranger") },
+            label = { Text(stringResource(R.string.name)) },
+            placeholder = { Text(stringResource(R.string.stranger)) },
             singleLine = true,
             isError = error != null,
             supportingText = { Text(error ?: "${text.length}/24") },
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { onSetName(text.trim()) }, enabled = text.trim().isNotEmpty() && text.trim() != current) { Text("Save") }
+            Button(onClick = { onSetName(text.trim()) }, enabled = text.trim().isNotEmpty() && text.trim() != current) { Text(stringResource(R.string.save)) }
             if (current.isNotEmpty()) {
-                TextButton(onClick = { text = ""; onSetName("") }) { Text("Remove name") }
+                TextButton(onClick = { text = ""; onSetName("") }) { Text(stringResource(R.string.remove_name)) }
             }
         }
     }

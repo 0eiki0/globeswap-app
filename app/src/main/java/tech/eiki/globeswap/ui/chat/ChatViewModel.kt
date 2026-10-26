@@ -1,14 +1,10 @@
 package tech.eiki.globeswap.ui.chat
 
 import android.util.Log
+import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import tech.eiki.globeswap.data.ConversationDetail
-import tech.eiki.globeswap.data.ReportReason
-import tech.eiki.globeswap.data.ServiceLocator
-import tech.eiki.globeswap.data.userMessage
-import tech.eiki.globeswap.notifications.NewPhotoNotifier
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,6 +17,13 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.ConversationDetail
+import tech.eiki.globeswap.data.ReportReason
+import tech.eiki.globeswap.data.ServiceLocator
+import tech.eiki.globeswap.data.userMessage
+import tech.eiki.globeswap.notifications.NewPhotoNotifier
+import tech.eiki.globeswap.util.appString
 
 class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val repo = ServiceLocator.repository
@@ -46,7 +49,7 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val _toasts = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val toasts: SharedFlow<String> = _toasts.asSharedFlow()
 
-    fun reply(jpeg: ByteArray) = launchSafely("Could not send") {
+    fun reply(jpeg: ByteArray) = launchSafely(R.string.could_not_send) {
         _sending.value = true
         try {
             repo.reply(conversationId, jpeg)
@@ -61,51 +64,51 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     }
 
     fun report(reason: ReportReason, messageId: String?, alsoBlock: Boolean, onBlocked: () -> Unit) =
-        launchSafely("Could not report") {
+        launchSafely(R.string.could_not_report) {
             repo.report(conversationId, messageId, reason)
             if (alsoBlock) {
                 repo.block(conversationId)
                 onBlocked()
             }
-            _toasts.emit("Thanks! Your report has been sent.")
+            _toasts.emit(appString(R.string.report_sent))
         }
 
-    fun block(onBlocked: () -> Unit) = launchSafely("Could not block") {
+    fun block(onBlocked: () -> Unit) = launchSafely(R.string.could_not_block) {
         repo.block(conversationId)
-        _toasts.emit("Person blocked.")
+        _toasts.emit(appString(R.string.person_blocked))
         onBlocked()
     }
 
-    fun deleteChat(onDeleted: () -> Unit) = launchSafely("Could not delete chat") {
+    fun deleteChat(onDeleted: () -> Unit) = launchSafely(R.string.could_not_delete_chat) {
         repo.deleteConversation(conversationId)
-        _toasts.emit("Chat deleted.")
+        _toasts.emit(appString(R.string.chat_deleted))
         onDeleted()
     }
 
-    fun deletePhoto(messageId: String) = launchSafely("Could not delete photo") {
+    fun deletePhoto(messageId: String) = launchSafely(R.string.could_not_delete_photo) {
         repo.deleteMessage(conversationId, messageId)
-        _toasts.emit("Photo deleted.")
+        _toasts.emit(appString(R.string.photo_deleted))
     }
 
     /** Reaktion auf ein Foto des Gegenübers setzen; dasselbe Emoji noch einmal entfernt sie. */
-    fun react(messageId: String, emoji: String) = launchSafely("Could not react") {
+    fun react(messageId: String, emoji: String) = launchSafely(R.string.could_not_react) {
         repo.react(conversationId, messageId, emoji)
     }
 
-    fun endChat() = launchSafely("Could not end chat") {
+    fun endChat() = launchSafely(R.string.could_not_end_chat) {
         repo.endConversation(conversationId)
-        _toasts.emit("Chat ended.")
+        _toasts.emit(appString(R.string.chat_ended_toast))
     }
 
-    private fun launchSafely(errorMessage: String?, block: suspend () -> Unit) {
+    private fun launchSafely(@StringRes errorMessage: Int?, block: suspend () -> Unit) {
         viewModelScope.launch {
             try {
                 block()
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                Log.e(TAG, errorMessage ?: "Fehler", e)
-                if (errorMessage != null) _toasts.emit("$errorMessage: ${e.userMessage()}")
+                Log.e(TAG, "Fehler", e)
+                if (errorMessage != null) _toasts.emit(appString(R.string.error_with_reason, appString(errorMessage), e.userMessage()))
             }
         }
     }

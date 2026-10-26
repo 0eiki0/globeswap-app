@@ -4,6 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.ui.onboarding.isOldEnough
 import java.time.LocalDate
 
@@ -14,7 +15,7 @@ class CountriesTest {
         assertEquals("🇩🇪 Germany", Countries.label("DE"))
         assertEquals("", Countries.label(""))
         assertEquals("", Countries.flag("xx1"))
-        assertEquals("South America", Countries.continent("SA"))
+        assertEquals(R.string.cont_sa, Countries.continent("SA"))
     }
 
     @Test
