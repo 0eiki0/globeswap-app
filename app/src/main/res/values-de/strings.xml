@@ -204,7 +204,7 @@
     <string name="geo_note_2">). Karte: Natural Earth. Wer sein Land ausgeschaltet hat, erscheint hier nicht.</string>
     <string name="map_desc">Weltkarte mit %1$d markierten Ländern</string>
     <string name="ach_c1">Erster Stranger</string>
-    <string name="ach_c1_d">Dein erstes Foto aus einem anderen Land</string>
+    <string name="ach_c1_d">Dein erstes Foto von einem Stranger</string>
     <string name="ach_c5">Entdecker</string>
     <string name="ach_c10">Globetrotter</string>
     <string name="ach_c25">Weltreisender</string>
@@ -215,7 +215,7 @@
     <string name="ach_all">Alle Kontinente</string>
     <string name="ach_all_d">Fotos von jedem bewohnten Kontinent</string>
     <string name="ach_photos">%1$d Fotos</string>
-    <string name="ach_photos_d">%1$d Fotos von Strangern aus dem Ausland</string>
+    <string name="ach_photos_d">%1$d Fotos von Strangern</string>
     <string name="cont_af">Afrika</string>
     <string name="cont_an">Antarktis</string>
     <string name="cont_as">Asien</string>

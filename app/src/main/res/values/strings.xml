@@ -205,7 +205,7 @@
     <string name="geo_note_2">). Map: Natural Earth. People who switched off their country don\'t appear here.</string>
     <string name="map_desc">World map with %1$d highlighted countries</string>
     <string name="ach_c1">First stranger</string>
-    <string name="ach_c1_d">Your first photo from another country</string>
+    <string name="ach_c1_d">Your first photo from a stranger</string>
     <string name="ach_c5">Explorer</string>
     <string name="ach_c10">Globetrotter</string>
     <string name="ach_c25">World traveler</string>
@@ -216,7 +216,7 @@
     <string name="ach_all">All continents</string>
     <string name="ach_all_d">Photos from every inhabited continent</string>
     <string name="ach_photos">%1$d photos</string>
-    <string name="ach_photos_d">%1$d photos from strangers abroad</string>
+    <string name="ach_photos_d">%1$d photos from strangers</string>
     <string name="cont_af">Africa</string>
     <string name="cont_an">Antarctica</string>
     <string name="cont_as">Asia</string>
