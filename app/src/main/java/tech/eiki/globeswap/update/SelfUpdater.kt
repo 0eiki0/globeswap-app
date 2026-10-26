@@ -22,6 +22,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import tech.eiki.globeswap.BuildConfig
 import tech.eiki.globeswap.R
+import tech.eiki.globeswap.util.AppLanguage
 import tech.eiki.globeswap.data.InstallChannel
 import tech.eiki.globeswap.data.LatestRelease
 import tech.eiki.globeswap.data.ServiceLocator
@@ -81,7 +82,7 @@ class SelfUpdater(
             withContext(Dispatchers.IO) { install(file) }
         } catch (e: Exception) {
             Log.w(TAG, "Selbst-Update", e)
-            _state.value = SelfUpdateState.Failed(context.getString(R.string.upd_download_failed))
+            _state.value = SelfUpdateState.Failed(AppLanguage.wrap(context).getString(R.string.upd_download_failed))
         }
     }
 
@@ -93,7 +94,7 @@ class SelfUpdater(
     }
 
     fun onInstallFinished(success: Boolean, message: String?) {
-        _state.value = if (success) SelfUpdateState.Idle else SelfUpdateState.Failed(message ?: context.getString(R.string.upd_install_failed))
+        _state.value = if (success) SelfUpdateState.Idle else SelfUpdateState.Failed(message ?: AppLanguage.wrap(context).getString(R.string.upd_install_failed))
     }
 
     fun reset() {
@@ -140,12 +141,12 @@ class SelfUpdater(
         fun verifyApk(context: Context, file: File, currentCode: Int): String? {
             val pm = context.packageManager
             val flags = PackageManager.GET_SIGNING_CERTIFICATES
-            val archive = pm.getPackageArchiveInfo(file.path, flags) ?: return context.getString(R.string.upd_not_app)
+            val archive = pm.getPackageArchiveInfo(file.path, flags) ?: return AppLanguage.wrap(context).getString(R.string.upd_not_app)
             val installed = pm.getPackageInfo(context.packageName, flags)
             return when {
-                archive.packageName != context.packageName -> context.getString(R.string.upd_not_globeswap)
-                archive.longVersionCode <= currentCode -> context.getString(R.string.upd_same_version)
-                signers(archive) != signers(installed) -> context.getString(R.string.upd_bad_signature)
+                archive.packageName != context.packageName -> AppLanguage.wrap(context).getString(R.string.upd_not_globeswap)
+                archive.longVersionCode <= currentCode -> AppLanguage.wrap(context).getString(R.string.upd_same_version)
+                signers(archive) != signers(installed) -> AppLanguage.wrap(context).getString(R.string.upd_bad_signature)
                 else -> null
             }
         }

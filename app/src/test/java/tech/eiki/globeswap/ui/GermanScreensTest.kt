@@ -18,6 +18,7 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
+import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.ApiException
 import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.Countries
@@ -33,10 +34,12 @@ import tech.eiki.globeswap.ui.chat.ChatEnded
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.onboarding.AgeGateScreen
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
+import tech.eiki.globeswap.ui.settings.LanguageSection
 import tech.eiki.globeswap.ui.settings.SettingsContent
 import tech.eiki.globeswap.ui.theme.GlobeSwapTheme
 import tech.eiki.globeswap.ui.world.WorldContent
 import tech.eiki.globeswap.ui.world.WorldShapes
+import tech.eiki.globeswap.util.AppLanguage
 import org.junit.Assert.assertEquals
 
 /** Die App auf Deutsch: Texte kommen aus values-de, Screenshots zur Prüfung der Textlängen (build/outputs/roborazzi/de-*). */
@@ -113,6 +116,23 @@ class GermanScreensTest {
         compose.onNodeWithText("Die fremde Person hat diesen Chat beendet").assertExists()
         compose.onNodeWithText("Wann bist du geboren?").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/de-misc.png")
+    }
+
+    @Test
+    fun languageCanBeChosen() {
+        compose.setContent { GlobeSwapTheme { Surface { Column { LanguageSection(AppLanguage.GERMAN, onSelect = {}) } } } }
+        compose.onNodeWithText("Sprache des Handys").assertExists()
+        compose.onNodeWithText("English").assertExists()
+        try {
+            AppLanguage.set(context, AppLanguage.ENGLISH)
+            assertEquals("Swap with", AppLanguage.wrap(context).getString(R.string.swap_with))
+            assertEquals("No connection to the server.", java.io.IOException().userMessage())
+            AppLanguage.set(context, AppLanguage.SYSTEM)
+            assertEquals("Tauschen mit", AppLanguage.wrap(context).getString(R.string.swap_with))
+            assertEquals("Swap!", AppLanguage.wrap(context).getString(R.string.swap_confirm))
+        } finally {
+            AppLanguage.set(context, AppLanguage.SYSTEM)
+        }
     }
 
     @Test

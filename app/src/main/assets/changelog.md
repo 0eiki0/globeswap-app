@@ -5,7 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
-- GlobeSwap now speaks German – the app follows your phone's language (German or English)
+- GlobeSwap now speaks German – it follows your phone's language, or pick one in Settings → Language
 
 ## 2.8 (2026-10-25)
 - Achievements on your world map, and how much of the world you've seen compared to others

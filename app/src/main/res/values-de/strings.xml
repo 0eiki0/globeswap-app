@@ -10,7 +10,7 @@
     <string name="stranger">Fremde Person</string>
     <string name="the_stranger">Die fremde Person</string>
     <string name="chats">Chats</string>
-    <string name="swap_tab">Tauschen</string>
+    <string name="swap_tab">Swap</string>
     <string name="whats_new">Neuigkeiten</string>
     <string name="report">Melden</string>
     <string name="block">Blockieren</string>
@@ -123,7 +123,7 @@
     <string name="delete_my_data">Meine Daten löschen</string>
     <string name="delete_all_q">Alle deine Daten löschen?</string>
     <string name="delete_all_text">Alle deine Chats und Fotos werden vom Server gelöscht – auch für die anderen. Das lässt sich nicht rückgängig machen.</string>
-    <string name="no_swaps_yet">Noch keine Tausche. Mach im Tab „Tauschen“ ein Foto, um loszulegen!</string>
+    <string name="no_swaps_yet">Noch keine Tausche. Mach im Tab „Swap“ ein Foto, um loszulegen!</string>
     <string name="new_photo_for_you">Neues Foto für dich!</string>
     <string name="chat_ended">Chat beendet</string>
     <string name="waiting_their_photo">Warte auf ihr Foto</string>
@@ -184,7 +184,7 @@
     <string name="allow_camera">Kamera erlauben</string>
     <string name="todays_theme">THEMA DES TAGES</string>
     <string name="zoom_desc">Zoom %1$s×</string>
-    <string name="swap_confirm">Tauschen!</string>
+    <string name="swap_confirm">Swap!</string>
     <string name="swap_hint">Mach ein Foto – es geht an eine fremde Person irgendwo auf der Welt, und du bekommst ihres.</string>
     <string name="swap_sending">Dein Foto ist unterwegs…</string>
     <string name="swap_waiting">Warte auf eine fremde Person…</string>
@@ -272,4 +272,6 @@
         <item quantity="one">Neues Foto für dich</item>
         <item quantity="other">%1$d neue Fotos für dich</item>
     </plurals>
+    <string name="language">Sprache</string>
+    <string name="language_system">Sprache des Handys</string>
 </resources>

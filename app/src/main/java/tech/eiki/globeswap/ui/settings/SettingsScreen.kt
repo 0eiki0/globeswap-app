@@ -1,5 +1,6 @@
 package tech.eiki.globeswap.ui.settings
 
+import android.app.Activity
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +37,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -52,6 +54,7 @@ import tech.eiki.globeswap.data.MatchPref
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.UserSettings
 import tech.eiki.globeswap.data.userMessage
+import tech.eiki.globeswap.util.AppLanguage
 
 class SettingsViewModel : ViewModel() {
     private val repo = ServiceLocator.repository
@@ -127,6 +130,12 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
     ) { padding ->
         val s = settings
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState())) {
+            val context = LocalContext.current
+            LanguageSection(AppLanguage.get(context)) { language ->
+                AppLanguage.set(context, language)
+                (context as? Activity)?.recreate() // neu aufbauen, damit alle Texte die neue Sprache haben
+            }
+            HorizontalDivider()
             when {
                 s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode, vm::setName, nameError)
                 error != null -> Column(Modifier.padding(24.dp)) {
@@ -135,6 +144,27 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
                 }
                 else -> Row(Modifier.fillMaxWidth().padding(48.dp)) { CircularProgressIndicator() }
             }
+        }
+    }
+}
+
+/** Sprache der App: wie am Handy, Englisch oder Deutsch. Die Sprachnamen stehen immer in ihrer eigenen Sprache. */
+@Composable
+internal fun LanguageSection(current: String, onSelect: (String) -> Unit) {
+    SectionTitle(stringResource(R.string.language))
+    listOf(
+        AppLanguage.SYSTEM to stringResource(R.string.language_system),
+        AppLanguage.ENGLISH to stringResource(R.string.language_en),
+        AppLanguage.GERMAN to stringResource(R.string.language_de),
+    ).forEach { (value, label) ->
+        Row(
+            Modifier.fillMaxWidth()
+                .selectable(selected = current == value, onClick = { if (current != value) onSelect(value) })
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(selected = current == value, onClick = null)
+            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 12.dp))
         }
     }
 }

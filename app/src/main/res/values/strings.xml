@@ -273,4 +273,8 @@
         <item quantity="one">New photo for you</item>
         <item quantity="other">%1$d new photos for you</item>
     </plurals>
+    <string name="language">Language</string>
+    <string name="language_system">Phone language</string>
+    <string name="language_en" translatable="false">English</string>
+    <string name="language_de" translatable="false">Deutsch</string>
 </resources>

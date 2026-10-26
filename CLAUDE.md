@@ -22,8 +22,9 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
 - **Zweisprachig (Englisch + Deutsch):** Keine Texte für Nutzer direkt im Code. Jeder neue oder geänderte Text kommt
   in `res/values/strings.xml` (Englisch, Standard) **und** `res/values-de/strings.xml` (Deutsch, „du“) – gleicher Key.
   In Compose `stringResource`/`pluralStringResource`, sonst `context.getString` bzw. `appString` (`util/Strings.kt`).
-  Begriffe: „Stranger“ = „Fremde Person“, Tauschen-Knopf = „Tauschen!“. Lange deutsche Texte mit `GermanScreensTest` prüfen.
-  Changelog und Tagesthemen bleiben Englisch.
+  Begriffe: „Stranger“ = „Fremde Person“; Senden-Knopf heißt in allen Sprachen „Swap!“, der Tab „Swap“ (Name der App). Lange deutsche Texte mit `GermanScreensTest` prüfen.
+  Changelog und Tagesthemen bleiben Englisch. Sprache wählbar in Einstellungen → Sprache (`util/AppLanguage.kt`):
+  Texte außerhalb von Compose immer über `AppLanguage.wrap(context)` bzw. `appString`, nicht direkt über den App-Kontext.
 
 ## Technik
 - Domain/Server: `https://globeswap.de` (`globeswap.serverUrl` in `gradle.properties`); alte Domain swap.eiki.tech nur noch Alias.

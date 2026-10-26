@@ -15,6 +15,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.ProcessLifecycleOwner
 import tech.eiki.globeswap.MainActivity
 import tech.eiki.globeswap.R
+import tech.eiki.globeswap.util.AppLanguage
 import tech.eiki.globeswap.data.ServiceLocator
 
 /**
@@ -60,7 +61,7 @@ object NewPhotoNotifier {
     }
 
     fun createChannel(context: Context) {
-        val channel = NotificationChannel(CHANNEL_ID, context.getString(R.string.notif_channel), NotificationManager.IMPORTANCE_DEFAULT)
+        val channel = NotificationChannel(CHANNEL_ID, AppLanguage.wrap(context).getString(R.string.notif_channel), NotificationManager.IMPORTANCE_DEFAULT)
         context.getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
@@ -81,8 +82,8 @@ object NewPhotoNotifier {
         )
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(R.drawable.ic_notification)
-            .setContentTitle(context.resources.getQuantityString(R.plurals.notif_title, count, count))
-            .setContentText(context.getString(R.string.notif_text))
+            .setContentTitle(AppLanguage.wrap(context).resources.getQuantityString(R.plurals.notif_title, count, count))
+            .setContentText(AppLanguage.wrap(context).getString(R.string.notif_text))
             .setContentIntent(intent)
             .setAutoCancel(true)
             .build()
