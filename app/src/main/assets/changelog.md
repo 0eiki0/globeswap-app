@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Chats show just the flag of the other person's country in the title
 
 ## 3.2.1 (2026-10-27)
 - Achievements are now sorted into categories you can open and close

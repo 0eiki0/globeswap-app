@@ -133,7 +133,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
             TopAppBar(
                 title = {
                     Column {
-                        Text(listOf(conversation?.displayName(stringResource(R.string.stranger)) ?: stringResource(R.string.stranger), Countries.label(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" · "))
+                        Text(listOf(conversation?.displayName(stringResource(R.string.stranger)) ?: stringResource(R.string.stranger), Countries.flag(conversation?.country.orEmpty())).filter { it.isNotEmpty() }.joinToString(" "))
                         StrangerId(conversation?.label.orEmpty())
                     }
                 },
