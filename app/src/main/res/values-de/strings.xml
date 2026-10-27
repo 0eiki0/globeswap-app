@@ -320,4 +320,12 @@
     <string name="ach_filters_d">Jeden Filter benutzt</string>
     <string name="ach_wide">Weitwinkel</string>
     <string name="ach_wide_d">Ein Foto mit der Ultraweitwinkel-Kamera</string>
+    <string name="cat_countries">Ländersammler</string>
+    <string name="cat_discover">Entdecken</string>
+    <string name="cat_continents">Kontinente</string>
+    <string name="cat_time">Zeit &amp; Zeitzonen</string>
+    <string name="cat_streaks">Dranbleiben</string>
+    <string name="cat_chats">Chats &amp; Reaktionen</string>
+    <string name="cat_photos">Fotos</string>
+    <string name="cat_progress">%1$d von %2$d erreicht</string>
 </resources>

@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Achievements are now sorted into categories you can open and close
 
 ## 3.2 (2026-10-27)
 - 26 new achievements on your world map: night owl, streaks, time zones, pen pal, filter fan and many more

@@ -323,4 +323,12 @@
     <string name="ach_filters_d">Used every filter</string>
     <string name="ach_wide">Wide angle</string>
     <string name="ach_wide_d">A photo with the ultra-wide camera</string>
+    <string name="cat_countries">Country collector</string>
+    <string name="cat_discover">Discover</string>
+    <string name="cat_continents">Continents</string>
+    <string name="cat_time">Time &amp; time zones</string>
+    <string name="cat_streaks">Keep it up</string>
+    <string name="cat_chats">Chats &amp; reactions</string>
+    <string name="cat_photos">Photos</string>
+    <string name="cat_progress">%1$d of %2$d unlocked</string>
 </resources>

@@ -23,7 +23,30 @@ data class Achievement(
     val number: Int? = null,
     @StringRes val place: Int? = null,
     val text: String? = null,
-)
+) {
+    val category: AchievementCategory get() = categoryOf(id)
+}
+
+/** Kategorien der Erfolgsseite, in dieser Reihenfolge. */
+enum class AchievementCategory(val emoji: String, @StringRes val title: Int) {
+    COUNTRIES("🌍", R.string.cat_countries),
+    DISCOVER("🧭", R.string.cat_discover),
+    CONTINENTS("🗺️", R.string.cat_continents),
+    TIME("⏰", R.string.cat_time),
+    STREAKS("🔥", R.string.cat_streaks),
+    CHATS("💬", R.string.cat_chats),
+    PHOTOS("📸", R.string.cat_photos),
+}
+
+internal fun categoryOf(id: String): AchievementCategory = when {
+    id.startsWith("countries-") -> AchievementCategory.COUNTRIES
+    id in setOf("neighbors", "antipode", "islands", "hemispheres", "antarctica") -> AchievementCategory.DISCOVER
+    id.startsWith("continent-") || id == "all-continents" -> AchievementCategory.CONTINENTS
+    id in setOf("night", "sunrise", "otherday", "zones") -> AchievementCategory.TIME
+    id.startsWith("streak-") || id.startsWith("theme-") || id == "loyal" || id == "anniversary" -> AchievementCategory.STREAKS
+    id in setOf("talkative", "penpal", "hearts", "artist", "mix") -> AchievementCategory.CHATS
+    else -> AchievementCategory.PHOTOS
+}
 
 private val COUNTRY_MILESTONES = listOf(
     Triple(1, "🌍", R.string.ach_c1 to R.string.ach_c1_d),

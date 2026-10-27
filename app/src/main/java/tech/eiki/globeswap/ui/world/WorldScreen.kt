@@ -3,7 +3,9 @@ package tech.eiki.globeswap.ui.world
 import android.app.Application
 import android.text.format.DateUtils
 import android.util.Log
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +20,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -32,11 +35,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -125,6 +131,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
     val countries = world.countries
     val context = LocalContext.current
     val geo = remember { CountryGeo.load(context) }
+    var open by remember { mutableStateOf(emptySet<AchievementCategory>()) }
     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Column(Modifier.padding(16.dp)) {
@@ -170,7 +177,16 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 4.dp),
             )
         }
-        items(badges, key = { it.id }) { AchievementRow(it) }
+        // Erfolge nach Kategorien, zum Aufklappen
+        badges.groupBy { it.category }.toSortedMap().forEach { (category, list) ->
+            val isOpen = category in open
+            item(key = "cat-${category.name}") {
+                CategoryHeader(category, list.count { it.unlocked }, list.size, isOpen) {
+                    open = if (isOpen) open - category else open + category
+                }
+            }
+            if (isOpen) items(list, key = { it.id }) { AchievementRow(it) }
+        }
         if (countries.isNotEmpty()) {
             item(key = "countries-title") {
                 Text(
@@ -216,6 +232,32 @@ private fun BigNumber(value: Int, label: String) {
         Text("$value", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+}
+
+/** Kopfzeile einer Kategorie: Symbol, Name, Fortschritt; Antippen klappt die Erfolge auf oder zu. */
+@Composable
+private fun CategoryHeader(category: AchievementCategory, unlocked: Int, total: Int, open: Boolean, onToggle: () -> Unit) {
+    val arrow by animateFloatAsState(if (open) 180f else 0f, label = "arrow")
+    ListItem(
+        modifier = Modifier.clickable(onClick = onToggle),
+        leadingContent = {
+            Box(
+                Modifier.size(44.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center,
+            ) { Text(category.emoji, fontSize = 22.sp) }
+        },
+        headlineContent = { Text(stringResource(category.title), fontWeight = FontWeight.SemiBold) },
+        supportingContent = {
+            Column {
+                Text(stringResource(R.string.cat_progress, unlocked, total), style = MaterialTheme.typography.bodySmall)
+                LinearProgressIndicator(
+                    progress = { unlocked.toFloat() / total },
+                    modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
+                )
+            }
+        },
+        trailingContent = { Icon(Icons.Default.KeyboardArrowDown, contentDescription = null, modifier = Modifier.rotate(arrow)) },
+    )
 }
 
 @Composable

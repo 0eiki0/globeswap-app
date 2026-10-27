@@ -101,6 +101,10 @@ class NewFeaturesTest {
         val list = compose.onNode(androidx.compose.ui.test.hasScrollAction())
         // 1 Länder-Meilenstein, Himmelsrichtungen (JP, BR, DE, CA), 4 Kontinente, "10 photos" (21 Fotos) = 7 von 40
         list.performScrollToNode(androidx.compose.ui.test.hasText("Achievements · 7 of 40"))
+        compose.onNodeWithText("Discover").assertExists() // Kategorien, zugeklappt
+        list.performScrollToNode(androidx.compose.ui.test.hasText("Continents"))
+        compose.onNodeWithText("Continents").performClick()
+        compose.onNodeWithText("4 of 7 unlocked").assertExists()
         list.performScrollToNode(androidx.compose.ui.test.hasText("Hello Asia"))
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/world-achievements.png")
         list.performScrollToNode(androidx.compose.ui.test.hasText("Japan"))

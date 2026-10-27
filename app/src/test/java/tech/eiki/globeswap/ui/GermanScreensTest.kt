@@ -95,7 +95,8 @@ class GermanScreensTest {
         )
         compose.setContent { GlobeSwapTheme { Surface { WorldContent(world, WorldShapes.load(context)) } } }
         compose.onNodeWithText("Du hast mehr von der Welt gesehen als 80 % der GlobeSwap-Nutzer.").assertExists()
-        compose.onNodeWithText("Länder").assertExists()
+        compose.onNodeWithText("Ländersammler").assertExists()
+        compose.onNodeWithText("Zeit & Zeitzonen").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/de-world.png")
     }
 
