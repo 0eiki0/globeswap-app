@@ -328,4 +328,5 @@
     <string name="cat_chats">Chats &amp; Reaktionen</string>
     <string name="cat_photos">Fotos</string>
     <string name="cat_progress">%1$d von %2$d erreicht</string>
+    <string name="err_rejected_content">Dieses Foto kann nicht gesendet werden, weil es gegen unsere Regeln zu verstoßen scheint (keine Nacktheit oder sexuellen Inhalte).</string>
 </resources>

@@ -19,6 +19,7 @@ fun Throwable.userMessage(): String = when (this) {
         "ended" -> appString(R.string.err_ended)
         "not_your_turn" -> appString(R.string.err_not_your_turn)
         "not_found" -> appString(R.string.err_not_found)
+        "rejected_content" -> appString(R.string.err_rejected_content)
         else -> appString(R.string.err_server, status)
     }
     is IOException -> appString(R.string.err_no_connection)

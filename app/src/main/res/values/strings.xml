@@ -331,4 +331,5 @@
     <string name="cat_chats">Chats &amp; reactions</string>
     <string name="cat_photos">Photos</string>
     <string name="cat_progress">%1$d of %2$d unlocked</string>
+    <string name="err_rejected_content">This photo can\'t be sent because it seems to break our rules (no nudity or sexual content).</string>
 </resources>

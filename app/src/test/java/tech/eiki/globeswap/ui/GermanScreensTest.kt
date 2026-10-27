@@ -41,6 +41,7 @@ import tech.eiki.globeswap.ui.world.WorldContent
 import tech.eiki.globeswap.ui.world.WorldShapes
 import tech.eiki.globeswap.util.AppLanguage
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 
 /** Die App auf Deutsch: Texte kommen aus values-de, Screenshots zur Prüfung der Textlängen (build/outputs/roborazzi/de-*). */
 @RunWith(RobolectricTestRunner::class)
@@ -139,6 +140,7 @@ class GermanScreensTest {
     @Test
     fun errorsAndCountries() {
         assertEquals("Warte auf das Foto des Strangers, bevor du antwortest.", ApiException(409, "not_your_turn").userMessage())
+        assertTrue(ApiException(422, "rejected_content").userMessage().startsWith("Dieses Foto kann nicht gesendet werden"))
         assertEquals("🇯🇵 Japan", Countries.label("JP"))
         assertEquals("🇩🇪 Deutschland", Countries.label("DE"))
     }
