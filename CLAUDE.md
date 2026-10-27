@@ -33,6 +33,8 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
 - Push über Firebase ohne google-services-Plugin (Werte aus `GOOGLE_SERVICES_JSON` in Gradle gelesen).
 - Tests: `./gradlew testGithubDebugUnitTest` (Robolectric + Roborazzi). Bekannt: TextField in einem AlertDialog
   wird unter Robolectric nie idle – Formulare als eigene Composable herauslösen und direkt testen (siehe `RestoreForm`).
+- Erfolge (`ui/world/Achievements.kt`, `assets/geo.txt`): Bei Änderungen auch die Regeln im Server anpassen
+  (`achievement_rules.go`, `geo.txt`) – sonst stimmt die Erfolgsübersicht im Admin-Bereich nicht.
 - Fastlane-Änderungshinweise (`fastlane/metadata/android/*/changelogs/`) max. 500 Zeichen.
 - Store-Grafiken, Screenshots für Google Play, Werbevideos und Texte liegen im Repo `0eiki0/globeswap-marketing`
   (nicht hier). Rohe Screenshots dafür erzeugt hier der Test `StoreScreenshots` (`app/build/outputs/store-raw/`).
