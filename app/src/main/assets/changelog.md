@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.2.2 (2026-10-27)
 - Chats show just the flag of the other person's country in the title
 
 ## 3.2.1 (2026-10-27)
