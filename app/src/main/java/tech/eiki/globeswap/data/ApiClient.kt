@@ -25,6 +25,7 @@ import okhttp3.Response
 import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import java.io.IOException
+import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
@@ -60,6 +61,8 @@ class ApiClient(
                     .header("X-App-Version-Code", versionCode.toString())
                     .header("X-App-Version-Name", versionName)
                     .header("X-App-Channel", channel)
+                    // Zeitzone des Handys in Minuten (für Erfolge wie „Nachteule“ und Serien in Ortszeit)
+                    .header("X-Tz-Offset", (TimeZone.getDefault().getOffset(System.currentTimeMillis()) / 60_000).toString())
                     .build()
             )
         }
@@ -122,13 +125,21 @@ class ApiClient(
         path: String,
         deserializer: DeserializationStrategy<T>,
         body: RequestBody? = null,
-    ): T = json.decodeFromString(deserializer, callRaw(method, path, body))
+        headers: Map<String, String> = emptyMap(),
+    ): T = json.decodeFromString(deserializer, callRaw(method, path, body, headers = headers))
 
-    suspend fun callRaw(method: String, path: String, body: RequestBody? = null, retryAuth: Boolean = true): String {
+    suspend fun callRaw(
+        method: String,
+        path: String,
+        body: RequestBody? = null,
+        retryAuth: Boolean = true,
+        headers: Map<String, String> = emptyMap(),
+    ): String {
         val token = token()
         val request = Request.Builder()
             .url(baseUrl + path)
             .header("Authorization", "Bearer $token")
+            .apply { headers.forEach { (k, v) -> header(k, v) } }
             .method(method, body ?: if (method == "POST") EMPTY_BODY else null)
             .build()
         val (status, text) = withContext(Dispatchers.IO) {
@@ -137,7 +148,7 @@ class ApiClient(
         if (status == 401 && retryAuth) {
             // Token ungültig (z. B. Server-Datenbank neu): neue anonyme Identität holen.
             tokenLock.withLock { if (prefs.getString(KEY_TOKEN, null) == token) forgetIdentity() }
-            return callRaw(method, path, body, retryAuth = false)
+            return callRaw(method, path, body, retryAuth = false, headers = headers)
         }
         if (status == HTTP_UPGRADE_REQUIRED) {
             onUpdateRequired?.invoke(errorField(text, "message").orEmpty())

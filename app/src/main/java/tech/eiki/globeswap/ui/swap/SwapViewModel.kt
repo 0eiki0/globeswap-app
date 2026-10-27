@@ -3,6 +3,7 @@ package tech.eiki.globeswap.ui.swap
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import tech.eiki.globeswap.data.PhotoInfo
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.SwapResult
 import tech.eiki.globeswap.data.userMessage
@@ -20,7 +21,7 @@ sealed interface SwapUiState {
     data object Sending : SwapUiState
     data class Waiting(val photoId: String) : SwapUiState
     data class Matched(val conversationId: String) : SwapUiState
-    class Failed(val message: String, val jpeg: ByteArray) : SwapUiState
+    class Failed(val message: String, val jpeg: ByteArray, val info: PhotoInfo) : SwapUiState
 }
 
 class SwapViewModel : ViewModel() {
@@ -29,11 +30,11 @@ class SwapViewModel : ViewModel() {
     val state: StateFlow<SwapUiState> = _state.asStateFlow()
     private var waitJob: Job? = null
 
-    fun swap(jpeg: ByteArray) {
+    fun swap(jpeg: ByteArray, info: PhotoInfo = PhotoInfo()) {
         _state.value = SwapUiState.Sending
         viewModelScope.launch {
             try {
-                when (val result = repo.swap(jpeg)) {
+                when (val result = repo.swap(jpeg, info)) {
                     is SwapResult.Matched -> _state.value = SwapUiState.Matched(result.conversationId)
                     is SwapResult.Waiting -> {
                         _state.value = SwapUiState.Waiting(result.photoId)
@@ -44,7 +45,7 @@ class SwapViewModel : ViewModel() {
                 throw e
             } catch (e: Exception) {
                 Log.e(TAG, "Swap fehlgeschlagen", e)
-                _state.value = SwapUiState.Failed(e.userMessage(), jpeg)
+                _state.value = SwapUiState.Failed(e.userMessage(), jpeg, info)
             }
         }
     }

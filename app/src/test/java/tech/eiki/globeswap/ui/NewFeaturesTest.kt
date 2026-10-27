@@ -99,8 +99,8 @@ class NewFeaturesTest {
         compose.onNodeWithText("You've seen more of the world than 80% of GlobeSwap users.").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/world.png")
         val list = compose.onNode(androidx.compose.ui.test.hasScrollAction())
-        // 1 Länder-Meilenstein, 4 Kontinente, "10 photos" (21 Fotos) = 6 von 14
-        list.performScrollToNode(androidx.compose.ui.test.hasText("Achievements · 6 of 14"))
+        // 1 Länder-Meilenstein, Himmelsrichtungen (JP, BR, DE, CA), 4 Kontinente, "10 photos" (21 Fotos) = 7 von 40
+        list.performScrollToNode(androidx.compose.ui.test.hasText("Achievements · 7 of 40"))
         list.performScrollToNode(androidx.compose.ui.test.hasText("Hello Asia"))
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/world-achievements.png")
         list.performScrollToNode(androidx.compose.ui.test.hasText("Japan"))

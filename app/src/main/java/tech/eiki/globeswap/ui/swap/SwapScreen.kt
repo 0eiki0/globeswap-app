@@ -43,7 +43,7 @@ fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
     when (val s = state) {
         SwapUiState.Capturing -> PhotoCapture(
             confirmLabel = stringResource(R.string.swap_confirm),
-            onConfirm = vm::swap,
+            onConfirm = { jpeg, info -> vm.swap(jpeg, info) },
             hint = stringResource(R.string.swap_hint),
             theme = theme,
         )
@@ -57,7 +57,7 @@ fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
         is SwapUiState.Failed -> StatusPanel(
             title = stringResource(R.string.swap_failed),
             text = s.message,
-            primary = stringResource(R.string.try_again) to { vm.swap(s.jpeg) },
+            primary = stringResource(R.string.try_again) to { vm.swap(s.jpeg, s.info) },
             secondary = stringResource(R.string.new_photo) to vm::reset,
         )
         is SwapUiState.Matched -> StatusPanel(title = stringResource(R.string.its_a_match), loading = true)

@@ -104,7 +104,7 @@ class PhotoEditorTest {
         val photo = testPhoto()
         compose.setContent {
             GlobeSwapTheme {
-                PhotoEditor(jpeg = photo, confirmLabel = "Swap!", onRetake = {}, onConfirm = { sent = it })
+                PhotoEditor(jpeg = photo, confirmLabel = "Swap!", onRetake = {}, onConfirm = { jpeg, _ -> sent = jpeg })
             }
         }
         compose.onRoot().captureRoboImage("$OUT/1-editor.png")
@@ -155,7 +155,7 @@ class PhotoEditorTest {
     @Test
     fun dragStickerToTrashDeletesIt() {
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = {}) }
+            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = { _, _ -> }) }
         }
         compose.onNodeWithContentDescription("Add sticker").performClick()
         compose.waitForIdle()
@@ -172,7 +172,7 @@ class PhotoEditorTest {
         var sent: ByteArray? = null
         val photo = testPhoto()
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = photo, confirmLabel = "Reply", onRetake = {}, onConfirm = { sent = it }) }
+            GlobeSwapTheme { PhotoEditor(jpeg = photo, confirmLabel = "Reply", onRetake = {}, onConfirm = { jpeg, _ -> sent = jpeg }) }
         }
         compose.onNodeWithText("Reply").performClick()
         compose.waitUntil(timeoutMillis = 5_000) { sent != null }
@@ -189,7 +189,7 @@ class PhotoEditorTest {
 
     private fun openEditorWithEmoji(emoji: String = "😎") {
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = {}) }
+            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = { _, _ -> }) }
         }
         compose.onNodeWithContentDescription("Add sticker").performClick()
         compose.waitForIdle()
@@ -298,7 +298,7 @@ class PhotoEditorTest {
     @Test
     fun tappingSelectedTextOpensTextEditor() {
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = {}) }
+            GlobeSwapTheme { PhotoEditor(jpeg = testPhoto(), confirmLabel = "Swap!", onRetake = {}, onConfirm = { _, _ -> }) }
         }
         compose.onNodeWithContentDescription("Add text").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("Hi")

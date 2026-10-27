@@ -31,7 +31,7 @@ class CameraLayoutTest {
         Shadows.shadowOf(ApplicationProvider.getApplicationContext<Application>()).grantPermissions(Manifest.permission.CAMERA)
         compose.setContent {
             GlobeSwapTheme {
-                PhotoCapture(confirmLabel = "Swap!", onConfirm = {}, hint = "Take a photo – it goes to a stranger.", theme = "Your breakfast")
+                PhotoCapture(confirmLabel = "Swap!", onConfirm = { _, _ -> }, hint = "Take a photo – it goes to a stranger.", theme = "Your breakfast")
             }
         }
         compose.onNodeWithText("Your breakfast").assertExists()

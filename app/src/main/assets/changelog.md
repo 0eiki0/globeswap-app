@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- 26 new achievements on your world map: night owl, streaks, time zones, pen pal, filter fan and many more
+- Daily theme: tap it in the camera to join – it counts for your achievements
 
 ## 3.1.1 (2026-10-26)
 - Achievements: clearer texts – photo badges count every photo from a stranger

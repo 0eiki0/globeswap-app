@@ -118,7 +118,7 @@ fun ChatScreen(onBack: () -> Unit, vm: ChatViewModel = viewModel()) {
     if (replying) {
         PhotoCapture(
             confirmLabel = stringResource(R.string.reply),
-            onConfirm = { vm.reply(it); replying = false },
+            onConfirm = { jpeg, info -> vm.reply(jpeg, info); replying = false },
             onCancel = { replying = false },
             hint = stringResource(R.string.reply_with_photo),
             modifier = Modifier.navigationBarsPadding(),

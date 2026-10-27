@@ -100,12 +100,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.PhotoInfo
+import tech.eiki.globeswap.util.ImageUtils
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tech.eiki.globeswap.R
-import tech.eiki.globeswap.util.ImageUtils
 
 private enum class Tool { NONE, DRAW, FILTER }
 
@@ -114,7 +115,7 @@ private const val TRASH_ZONE = 0.86f
 
 /**
  * Bearbeiten vor dem Senden: Text, Zeichnen, Emoji-Sticker und Filter.
- * [onConfirm] bekommt das fertig gerenderte JPEG.
+ * [onConfirm] bekommt das fertig gerenderte JPEG und seine Merkmale (bearbeitet, Filter) für die Erfolge.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -122,7 +123,7 @@ fun PhotoEditor(
     jpeg: ByteArray,
     confirmLabel: String,
     onRetake: () -> Unit,
-    onConfirm: (ByteArray) -> Unit,
+    onConfirm: (ByteArray, PhotoInfo) -> Unit,
 ) {
     val source = remember(jpeg) { BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size) }
     val thumbnail = remember(source) { thumbnailOf(source) }
@@ -156,7 +157,11 @@ fun PhotoEditor(
                 if (edited) ImageUtils.encodeJpeg(EditorRenderer.render(source, state)) else jpeg
             }
             exporting = false
-            onConfirm(result)
+            val info = PhotoInfo(
+                edited = state.strokes.isNotEmpty() || state.stickers.isNotEmpty(),
+                filter = state.filter.takeIf { it != PhotoFilter.ORIGINAL }?.name,
+            )
+            onConfirm(result, info)
         }
     }
 

@@ -5,6 +5,14 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.ConversationDetail
+import tech.eiki.globeswap.data.PhotoInfo
+import tech.eiki.globeswap.data.ReportReason
+import tech.eiki.globeswap.data.ServiceLocator
+import tech.eiki.globeswap.data.userMessage
+import tech.eiki.globeswap.notifications.NewPhotoNotifier
+import tech.eiki.globeswap.util.appString
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,13 +25,6 @@ import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import tech.eiki.globeswap.R
-import tech.eiki.globeswap.data.ConversationDetail
-import tech.eiki.globeswap.data.ReportReason
-import tech.eiki.globeswap.data.ServiceLocator
-import tech.eiki.globeswap.data.userMessage
-import tech.eiki.globeswap.notifications.NewPhotoNotifier
-import tech.eiki.globeswap.util.appString
 
 class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val repo = ServiceLocator.repository
@@ -49,10 +50,10 @@ class ChatViewModel(savedStateHandle: SavedStateHandle) : ViewModel() {
     private val _toasts = MutableSharedFlow<String>(extraBufferCapacity = 4)
     val toasts: SharedFlow<String> = _toasts.asSharedFlow()
 
-    fun reply(jpeg: ByteArray) = launchSafely(R.string.could_not_send) {
+    fun reply(jpeg: ByteArray, info: PhotoInfo = PhotoInfo()) = launchSafely(R.string.could_not_send) {
         _sending.value = true
         try {
-            repo.reply(conversationId, jpeg)
+            repo.reply(conversationId, jpeg, info)
         } finally {
             _sending.value = false
         }

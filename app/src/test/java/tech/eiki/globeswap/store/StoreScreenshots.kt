@@ -52,7 +52,7 @@ class StoreScreenshots {
     @Test
     fun editorWithText() {
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = ImageUtils.encodeJpeg(Scenes.sunset()), confirmLabel = "Swap!", onRetake = {}, onConfirm = {}) }
+            GlobeSwapTheme { PhotoEditor(jpeg = ImageUtils.encodeJpeg(Scenes.sunset()), confirmLabel = "Swap!", onRetake = {}, onConfirm = { _, _ -> }) }
         }
         compose.onNodeWithContentDescription("Add text").performClick()
         compose.onNode(hasSetTextAction()).performTextInput("Sunset in Lisbon!")
@@ -74,7 +74,7 @@ class StoreScreenshots {
     @Test
     fun editorStickerSelected() {
         compose.setContent {
-            GlobeSwapTheme { PhotoEditor(jpeg = ImageUtils.encodeJpeg(Scenes.mountains()), confirmLabel = "Reply", onRetake = {}, onConfirm = {}) }
+            GlobeSwapTheme { PhotoEditor(jpeg = ImageUtils.encodeJpeg(Scenes.mountains()), confirmLabel = "Reply", onRetake = {}, onConfirm = { _, _ -> }) }
         }
         compose.onNodeWithContentDescription("Add sticker").performClick()
         compose.waitForIdle()

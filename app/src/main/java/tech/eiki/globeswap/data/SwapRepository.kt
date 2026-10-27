@@ -38,8 +38,8 @@ class SwapRepository(private val api: ApiClient) {
 
     // ---------------------------------------------------------------- Swap
 
-    suspend fun swap(jpeg: ByteArray): SwapResult {
-        val response = api.call("POST", "/api/swap", SwapResponse.serializer(), jpeg.toRequestBody(ApiClient.JPEG))
+    suspend fun swap(jpeg: ByteArray, info: PhotoInfo = PhotoInfo()): SwapResult {
+        val response = api.call("POST", "/api/swap", SwapResponse.serializer(), jpeg.toRequestBody(ApiClient.JPEG), info.headers())
         localChanges.tryEmit(Unit)
         val conversationId = response.conversationId
         return if (response.status == "matched" && conversationId != null) {
@@ -96,8 +96,8 @@ class SwapRepository(private val api: ApiClient) {
                 }
             }
 
-    suspend fun reply(conversationId: String, jpeg: ByteArray) {
-        api.callRaw("POST", "/api/conversations/$conversationId/messages", jpeg.toRequestBody(ApiClient.JPEG))
+    suspend fun reply(conversationId: String, jpeg: ByteArray, info: PhotoInfo = PhotoInfo()) {
+        api.callRaw("POST", "/api/conversations/$conversationId/messages", jpeg.toRequestBody(ApiClient.JPEG), headers = info.headers())
         localChanges.tryEmit(Unit)
     }
 

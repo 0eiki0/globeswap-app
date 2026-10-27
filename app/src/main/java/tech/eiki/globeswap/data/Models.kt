@@ -71,6 +71,22 @@ data class World(
     val continents: Int = 0,
     /** Anonymer Vergleich: so viel Prozent der aktiven Nutzer haben weniger Länder (null = zu wenige zum Vergleichen). */
     val percentile: Int? = null,
+    /** Werte für die Erfolge (Serie, Tagesthema, Zähler, Merkmale). */
+    val achievements: AchievementData = AchievementData(),
+)
+
+@Serializable
+data class AchievementData(
+    /** Eigenes Land (aus der IP), für „Nachbarschaft“ und „Antipode“. */
+    val home: String = "",
+    val createdAt: Long = 0,
+    val streak: Int = 0,
+    val bestStreak: Int = 0,
+    val themeDays: Int = 0,
+    /** z. B. night, sunrise, otherday, chat_photos, chat_days, reactions, edited, mix */
+    val stats: Map<String, Long> = emptyMap(),
+    /** z. B. "tz:60", "filter:VIVID", "wide" */
+    val flags: List<String> = emptyList(),
 )
 
 @Serializable

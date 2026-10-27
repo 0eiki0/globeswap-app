@@ -32,10 +32,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.LinkAnnotation
@@ -52,17 +54,17 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.Countries
+import tech.eiki.globeswap.data.ServiceLocator
+import tech.eiki.globeswap.data.World
+import tech.eiki.globeswap.data.userMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tech.eiki.globeswap.R
-import tech.eiki.globeswap.data.Countries
-import tech.eiki.globeswap.data.ServiceLocator
-import tech.eiki.globeswap.data.World
-import tech.eiki.globeswap.data.userMessage
 
 class WorldViewModel(app: Application) : AndroidViewModel(app) {
     sealed interface State {
@@ -121,6 +123,8 @@ fun WorldScreen(onBack: () -> Unit, vm: WorldViewModel = viewModel()) {
 @Composable
 internal fun WorldContent(world: World, shapes: WorldShapes) {
     val countries = world.countries
+    val context = LocalContext.current
+    val geo = remember { CountryGeo.load(context) }
     LazyColumn(contentPadding = PaddingValues(bottom = 24.dp)) {
         item {
             Column(Modifier.padding(16.dp)) {
@@ -157,7 +161,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
                 }
             }
         }
-        val badges = achievements(world)
+        val badges = achievements(world, geo)
         item(key = "badges-title") {
             Text(
                 stringResource(R.string.achievements_count, badges.count { it.unlocked }, badges.size),
@@ -216,8 +220,8 @@ private fun BigNumber(value: Int, label: String) {
 
 @Composable
 internal fun AchievementRow(a: Achievement) {
-    // Zahl oder Kontinent in Titel und Beschreibung einsetzen (überzählige Werte ignoriert der Formatierer)
-    val arg: Any = a.place?.let { stringResource(it) } ?: a.number ?: ""
+    // Zahl, Kontinent oder Land in Titel und Beschreibung einsetzen (überzählige Werte ignoriert der Formatierer)
+    val arg: Any = a.place?.let { stringResource(it) } ?: a.text ?: a.number ?: ""
     val title = stringResource(a.title, arg)
     val description = stringResource(a.description, arg)
     ListItem(

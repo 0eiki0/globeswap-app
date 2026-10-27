@@ -83,14 +83,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.PhotoInfo
+import tech.eiki.globeswap.ui.editor.PhotoEditor
+import tech.eiki.globeswap.util.ImageUtils
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import tech.eiki.globeswap.R
-import tech.eiki.globeswap.ui.editor.PhotoEditor
-import tech.eiki.globeswap.util.ImageUtils
 
 /**
  * Kamera mit Sucher im Fotoformat 3:4, danach der Editor (Text, Zeichnen, Sticker, Filter). [onConfirm] erhält das fertige JPEG.
@@ -98,7 +99,7 @@ import tech.eiki.globeswap.util.ImageUtils
 @Composable
 fun PhotoCapture(
     confirmLabel: String,
-    onConfirm: (ByteArray) -> Unit,
+    onConfirm: (ByteArray, PhotoInfo) -> Unit,
     modifier: Modifier = Modifier,
     hint: String? = null,
     onCancel: (() -> Unit)? = null,
@@ -114,6 +115,9 @@ fun PhotoCapture(
     LaunchedEffect(Unit) { if (!hasPermission) launcher.launch(Manifest.permission.CAMERA) }
 
     var captured by remember { mutableStateOf<ByteArray?>(null) }
+    var capturedWide by remember { mutableStateOf(false) }
+    // Beim Tagesthema mitmachen: Antippen des Themas, gilt für das nächste Foto (Erfolge „Tagesthema“)
+    var themeJoined by rememberSaveable { mutableStateOf(false) }
 
     Box(modifier.fillMaxSize().background(Color.Black)) {
         val photo = captured
@@ -123,9 +127,18 @@ fun PhotoCapture(
                 jpeg = photo,
                 confirmLabel = confirmLabel,
                 onRetake = { captured = null },
-                onConfirm = { edited -> onConfirm(edited); captured = null },
+                onConfirm = { edited, info ->
+                    onConfirm(edited, info.copy(theme = themeJoined && theme.isNotBlank(), wide = capturedWide))
+                    captured = null
+                },
             )
-            else -> CameraView(hint = hint, theme = theme, onCaptured = { captured = it })
+            else -> CameraView(
+                hint = hint,
+                theme = theme,
+                themeJoined = themeJoined,
+                onToggleTheme = { themeJoined = !themeJoined },
+                onCaptured = { jpeg, wide -> captured = jpeg; capturedWide = wide },
+            )
         }
         if (onCancel != null && photo == null) {
             IconButton(onClick = onCancel, modifier = Modifier.statusBarsPadding().padding(8.dp)) {
@@ -136,7 +149,13 @@ fun PhotoCapture(
 }
 
 @Composable
-private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> Unit) {
+private fun CameraView(
+    hint: String?,
+    theme: String,
+    themeJoined: Boolean,
+    onToggleTheme: () -> Unit,
+    onCaptured: (jpeg: ByteArray, wide: Boolean) -> Unit,
+) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val scope = rememberCoroutineScope()
@@ -222,6 +241,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
         if (busy) return
         busy = true
         val mirror = lensFacing == CameraSelector.LENS_FACING_FRONT
+        val wide = shownZoom < 0.95f // Ultraweitwinkel (eigene Kamera oder Zoom unter 1×)
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageCapturedCallback() {
@@ -231,7 +251,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
                             image.use { ImageUtils.toJpeg(it.toBitmap(), it.imageInfo.rotationDegrees, mirror) }
                         }
                         busy = false
-                        onCaptured(jpeg)
+                        onCaptured(jpeg, wide)
                     }
                 }
 
@@ -247,7 +267,7 @@ private fun CameraView(hint: String?, theme: String, onCaptured: (ByteArray) -> 
         // Oben: Tagesthema und Blitz auf dunklem Grund, nicht über dem Bild
         Box(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 8.dp, vertical = 4.dp)) {
             if (theme.isNotBlank()) {
-                DailyTheme(theme, Modifier.align(Alignment.Center).padding(horizontal = 48.dp))
+                DailyTheme(theme, Modifier.align(Alignment.Center).padding(horizontal = 48.dp), joined = themeJoined, onToggle = onToggleTheme)
             }
             IconButton(onClick = { flashOn = !flashOn }, modifier = Modifier.align(Alignment.CenterEnd)) {
                 Icon(
@@ -367,16 +387,24 @@ private fun PermissionMissing(onRequest: () -> Unit) {
     }
 }
 
-/** Tagesthema vom Server als kleine Anregung über dem Kamerabild. */
+/** Tagesthema vom Server als kleine Anregung über dem Kamerabild; mit [onToggle] lässt es sich antippen, um mitzumachen. */
 @Composable
-internal fun DailyTheme(theme: String, modifier: Modifier = Modifier) {
+internal fun DailyTheme(theme: String, modifier: Modifier = Modifier, joined: Boolean = false, onToggle: (() -> Unit)? = null) {
     Column(
         modifier
-            .background(Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.large)
+            .background(if (joined) Color(0xFF1E6FD9).copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.large)
+            .then(if (onToggle != null) Modifier.clip(MaterialTheme.shapes.large).clickable(onClick = onToggle) else Modifier)
             .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(stringResource(R.string.todays_theme), color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelSmall)
         Text(theme, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+        if (onToggle != null) {
+            Text(
+                stringResource(if (joined) R.string.theme_joined else R.string.theme_join),
+                color = Color.White.copy(alpha = if (joined) 1f else 0.75f),
+                style = MaterialTheme.typography.labelMedium,
+            )
+        }
     }
 }
