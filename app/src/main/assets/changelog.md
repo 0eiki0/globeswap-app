@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.2.1 (2026-10-27)
 - Achievements are now sorted into categories you can open and close
 
 ## 3.2 (2026-10-27)
