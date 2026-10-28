@@ -277,6 +277,10 @@
     <string name="language_system">Phone language</string>
     <string name="language_en" translatable="false">English</string>
     <string name="language_de" translatable="false">Deutsch</string>
+    <string name="theme">Appearance</string>
+    <string name="theme_system">Like my phone</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
     <string name="theme_join">Tap to join</string>
     <string name="theme_joined">✓ You\'re in</string>
     <string name="ach_c100">Half the world</string>

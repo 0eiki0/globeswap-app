@@ -55,6 +55,7 @@ import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.UserSettings
 import tech.eiki.globeswap.data.userMessage
 import tech.eiki.globeswap.util.AppLanguage
+import tech.eiki.globeswap.util.AppTheme
 
 class SettingsViewModel : ViewModel() {
     private val repo = ServiceLocator.repository
@@ -136,6 +137,8 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
                 (context as? Activity)?.recreate() // neu aufbauen, damit alle Texte die neue Sprache haben
             }
             HorizontalDivider()
+            ThemeSection(AppTheme.current) { AppTheme.set(context, it) }
+            HorizontalDivider()
             when {
                 s != null -> SettingsContent(s, vm::setShareCountry, vm::setMatchPref, onOpenWorld, vm::createBackupCode, vm::setName, nameError)
                 error != null -> Column(Modifier.padding(24.dp)) {
@@ -156,6 +159,27 @@ internal fun LanguageSection(current: String, onSelect: (String) -> Unit) {
         AppLanguage.SYSTEM to stringResource(R.string.language_system),
         AppLanguage.ENGLISH to stringResource(R.string.language_en),
         AppLanguage.GERMAN to stringResource(R.string.language_de),
+    ).forEach { (value, label) ->
+        Row(
+            Modifier.fillMaxWidth()
+                .selectable(selected = current == value, onClick = { if (current != value) onSelect(value) })
+                .padding(horizontal = 16.dp, vertical = 10.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            RadioButton(selected = current == value, onClick = null)
+            Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 12.dp))
+        }
+    }
+}
+
+/** Design: wie am Handy, hell oder dunkel – wechselt sofort. */
+@Composable
+internal fun ThemeSection(current: String, onSelect: (String) -> Unit) {
+    SectionTitle(stringResource(R.string.theme))
+    listOf(
+        AppTheme.SYSTEM to stringResource(R.string.theme_system),
+        AppTheme.LIGHT to stringResource(R.string.theme_light),
+        AppTheme.DARK to stringResource(R.string.theme_dark),
     ).forEach { (value, label) ->
         Row(
             Modifier.fillMaxWidth()

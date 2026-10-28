@@ -274,6 +274,10 @@
     </plurals>
     <string name="language">Sprache</string>
     <string name="language_system">Sprache des Handys</string>
+    <string name="theme">Design</string>
+    <string name="theme_system">Wie am Handy</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
     <string name="theme_join">Antippen zum Mitmachen</string>
     <string name="theme_joined">✓ Du machst mit</string>
     <string name="ach_c100">Halbe Welt</string>

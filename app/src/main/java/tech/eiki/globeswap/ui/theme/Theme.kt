@@ -1,11 +1,11 @@
 package tech.eiki.globeswap.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import tech.eiki.globeswap.util.AppTheme
 
 /** Markenfarbe von GlobeSwap (auch Hintergrund des App-Icons). */
 val GlobeBlue = Color(0xFF1E6FD9)
@@ -36,7 +36,8 @@ private val DarkColors = darkColorScheme(
 )
 
 // Bewusst ohne Android-12-Wallpaper-Farben, damit die App überall im GlobeSwap-Blau erscheint.
+// Hell oder dunkel nach Einstellungen → Design (Standard: wie am Handy).
 @Composable
-fun GlobeSwapTheme(content: @Composable () -> Unit) {
-    MaterialTheme(colorScheme = if (isSystemInDarkTheme()) DarkColors else LightColors, content = content)
+fun GlobeSwapTheme(darkTheme: Boolean = AppTheme.isDark(), content: @Composable () -> Unit) {
+    MaterialTheme(colorScheme = if (darkTheme) DarkColors else LightColors, content = content)
 }
