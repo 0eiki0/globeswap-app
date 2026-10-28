@@ -2,6 +2,9 @@ package tech.eiki.globeswap.ui.changelog
 
 import android.app.Application
 import androidx.compose.material3.Surface
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -75,6 +78,8 @@ class ChangelogTest {
         val context = ApplicationProvider.getApplicationContext<Application>()
         val entries = Changelog.parse(context.assets.open("changelog.md").bufferedReader().readText(), "2.7")
         compose.setContent { GlobeSwapTheme { Surface { ChangelogList(entries) } } }
+        // Neuere Versionen stehen darüber – erst zur installierten Version scrollen
+        compose.onNode(hasScrollAction()).performScrollToNode(hasText("Version 2.7"))
         compose.onNodeWithText("Version 2.7").assertExists()
         compose.onNodeWithText("installed").assertExists()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/changelog.png")
