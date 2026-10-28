@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.4 (2026-10-28)
 - Light or dark: choose the look of the app in Settings → Appearance
 
 ## 3.3 (2026-10-27)
