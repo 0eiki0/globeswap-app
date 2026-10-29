@@ -104,7 +104,7 @@ fun FloatingNavBar(selected: Tab, unread: Int, onSelect: (Tab) -> Unit, modifier
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(
-                Modifier.size(64.dp).shadow(10.dp, CircleShape).background(GlobeGradient, CircleShape)
+                Modifier.size(64.dp).background(GlobeGradient, CircleShape)
                     .border(4.dp, if (swapSelected) MaterialTheme.colorScheme.tertiary else Color.White, CircleShape),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Default.CameraAlt, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp)) }
