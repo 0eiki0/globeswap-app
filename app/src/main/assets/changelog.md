@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Bigger camera: the preview now fills the screen down to the bottom bar – and your photo looks exactly like the preview
 
 ## 3.5 (2026-10-29)
 - Fresh new look: chats as cards with filters, a see-through glass bar at the bottom with a big Swap button, and the world map as its own tab

@@ -28,12 +28,12 @@ import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -58,6 +58,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -71,6 +72,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -186,6 +188,8 @@ private fun CameraView(
     var wideSelector by remember { mutableStateOf<CameraSelector?>(null) }
     var pendingZoom by remember { mutableStateOf<Float?>(null) }
     var focusPoint by remember { mutableStateOf<Offset?>(null) }
+    // Seitenverhältnis des Suchers (Breite/Höhe); das Foto wird darauf zugeschnitten
+    val viewfinderAspect = remember { mutableFloatStateOf(3f / 4f) }
 
     // Sucher und Foto haben dasselbe Format 3:4 (hochkant): Was man im Sucher sieht, ist genau das Foto.
     val previewView = remember {
@@ -256,13 +260,14 @@ private fun CameraView(
         busy = true
         val mirror = lensFacing == CameraSelector.LENS_FACING_FRONT
         val wide = shownZoom < 0.95f // Ultraweitwinkel (eigene Kamera oder Zoom unter 1×)
+        val aspect = viewfinderAspect.floatValue
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageCapturedCallback() {
                 override fun onCaptureSuccess(image: ImageProxy) {
                     scope.launch {
                         val jpeg = withContext(Dispatchers.Default) {
-                            image.use { ImageUtils.toJpeg(it.toBitmap(), it.imageInfo.rotationDegrees, mirror) }
+                            image.use { ImageUtils.toJpeg(it.toBitmap(), it.imageInfo.rotationDegrees, mirror, aspect) }
                         }
                         busy = false
                         onCaptured(jpeg, wide)
@@ -277,115 +282,116 @@ private fun CameraView(
         )
     }
 
-    Column(Modifier.fillMaxSize()) {
-        // Oben: Tagesthema als Leiste auf dunklem Grund, nicht über dem Bild
-        Box(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
-            if (theme.isNotBlank()) {
-                DailyTheme(theme, Modifier.fillMaxWidth(), joined = themeJoined, onToggle = onToggleTheme)
-            }
-        }
-
-        // Sucher im Fotoformat 3:4 mit runden Ecken – auf kleinen Bildschirmen schmaler statt abgeschnitten
-        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
-            Box(Modifier.aspectRatio(3f / 4f).clip(RoundedCornerShape(28.dp)).background(Color(0xFF1A1A1A)).testTag("viewfinder")) {
-                AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
-                // Zwei Finger: zoomen. Antippen: dort scharfstellen.
-                Box(
-                    Modifier
-                        .fillMaxSize()
-                        .pointerInput(camera) {
-                            detectTransformGestures { _, _, zoom, _ ->
-                                val cam = camera ?: return@detectTransformGestures
-                                if (zoom != 1f) {
-                                    val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
-                                    cam.cameraControl.setZoomRatio((state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio))
-                                }
-                            }
-                        }
-                        .pointerInput(camera) {
-                            detectTapGestures { offset ->
-                                val cam = camera ?: return@detectTapGestures
-                                val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
-                                cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
-                                focusPoint = offset
-                            }
-                        },
-                )
-                focusPoint?.let { p ->
-                    Box(
-                        Modifier
-                            .offset { IntOffset(p.x.roundToInt() - 32.dp.roundToPx(), p.y.roundToInt() - 32.dp.roundToPx()) }
-                            .size(64.dp)
-                            .border(2.dp, Color.White, CircleShape),
-                    )
-                }
-                Column(
-                    Modifier.align(Alignment.BottomCenter).fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    if (hint != null) {
-                        Text(
-                            hint,
-                            color = Color.White,
-                            textAlign = TextAlign.Center,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier
-                                .padding(horizontal = 24.dp, vertical = 8.dp)
-                                .background(Color.Black.copy(alpha = 0.45f), MaterialTheme.shapes.medium)
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                        )
-                    }
-                    ZoomChips(presets, shownZoom, onSelect = ::selectZoom)
-                }
-            }
-        }
-
-        // Unten: Blitz, Auslöser (weißer Ring, blauer Verlauf) und Kamera wechseln
-        Row(
-            Modifier.fillMaxWidth().padding(vertical = 14.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            CameraButton(
-                if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                stringResource(R.string.flash),
-                highlighted = flashOn,
-            ) { flashOn = !flashOn }
+    // Sucher randlos von oben bis kurz vor die Leiste unten; Tagesthema und Auslöser liegen auf dem Bild.
+    // Das Foto wird genau im Format des Suchers zugeschnitten (zwischen 3:4 und 9:20), so wie man es sieht.
+    BoxWithConstraints(
+        Modifier.fillMaxSize().statusBarsPadding().padding(start = 8.dp, end = 8.dp, top = 4.dp, bottom = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        val aspect = (maxWidth / maxHeight).coerceIn(9f / 20f, 3f / 4f)
+        SideEffect { viewfinderAspect.floatValue = aspect }
+        Box(Modifier.aspectRatio(aspect).clip(RoundedCornerShape(28.dp)).background(Color(0xFF1A1A1A)).testTag("viewfinder")) {
+            AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
+            // Zwei Finger: zoomen. Antippen: dort scharfstellen.
             Box(
                 Modifier
-                    .size(80.dp)
-                    .border(5.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
-                    .padding(9.dp)
-                    .clip(CircleShape)
-                    .background(if (busy) SolidColor(Color.Gray) else GlobeGradient)
-                    .clickable(enabled = !busy) { takePhoto() },
-                contentAlignment = Alignment.Center,
-            ) {
-                if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.White)
+                    .fillMaxSize()
+                    .pointerInput(camera) {
+                        detectTransformGestures { _, _, zoom, _ ->
+                            val cam = camera ?: return@detectTransformGestures
+                            if (zoom != 1f) {
+                                val state = cam.cameraInfo.zoomState.value ?: return@detectTransformGestures
+                                cam.cameraControl.setZoomRatio((state.zoomRatio * zoom).coerceIn(state.minZoomRatio, state.maxZoomRatio))
+                            }
+                        }
+                    }
+                    .pointerInput(camera) {
+                        detectTapGestures { offset ->
+                            val cam = camera ?: return@detectTapGestures
+                            val point = previewView.meteringPointFactory.createPoint(offset.x, offset.y)
+                            cam.cameraControl.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
+                            focusPoint = offset
+                        }
+                    },
+            )
+            focusPoint?.let { p ->
+                Box(
+                    Modifier
+                        .offset { IntOffset(p.x.roundToInt() - 32.dp.roundToPx(), p.y.roundToInt() - 32.dp.roundToPx()) }
+                        .size(64.dp)
+                        .border(2.dp, Color.White, CircleShape),
+                )
             }
-            CameraButton(Icons.Default.FlipCameraAndroid, stringResource(R.string.switch_camera)) {
-                useWide = false
-                lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
-                    CameraSelector.LENS_FACING_FRONT
-                } else {
-                    CameraSelector.LENS_FACING_BACK
+            // Oben auf dem Bild: Tagesthema
+            if (theme.isNotBlank()) {
+                DailyTheme(theme, Modifier.align(Alignment.TopCenter).fillMaxWidth().padding(10.dp), joined = themeJoined, onToggle = onToggleTheme)
+            }
+            // Unten auf dem Bild (leicht abgedunkelt): Hinweis, Zoom, Blitz, Auslöser, Kamera wechseln
+            Column(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.45f))))
+                    .padding(top = 28.dp, bottom = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (hint != null) {
+                    Text(
+                        hint,
+                        color = Color.White,
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(horizontal = 24.dp, vertical = 4.dp)
+                            .background(Color.Black.copy(alpha = 0.45f), MaterialTheme.shapes.medium)
+                            .padding(horizontal = 12.dp, vertical = 8.dp),
+                    )
+                }
+                ZoomChips(presets, shownZoom, onSelect = ::selectZoom)
+                Row(
+                    Modifier.fillMaxWidth().padding(top = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    CameraButton(
+                        if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                        stringResource(R.string.flash),
+                        highlighted = flashOn,
+                    ) { flashOn = !flashOn }
+                    Box(
+                        Modifier
+                            .size(80.dp)
+                            .border(5.dp, Color.White, CircleShape)
+                            .padding(9.dp)
+                            .clip(CircleShape)
+                            .background(if (busy) SolidColor(Color.Gray) else GlobeGradient)
+                            .clickable(enabled = !busy) { takePhoto() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.White)
+                    }
+                    CameraButton(Icons.Default.FlipCameraAndroid, stringResource(R.string.switch_camera)) {
+                        useWide = false
+                        lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
+                            CameraSelector.LENS_FACING_FRONT
+                        } else {
+                            CameraSelector.LENS_FACING_BACK
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-/** Runder Knopf neben dem Auslöser (Blitz, Kamera wechseln). */
+/** Runder Knopf neben dem Auslöser (Blitz, Kamera wechseln), liegt auf dem Kamerabild. */
 @Composable
 private fun CameraButton(icon: ImageVector, description: String, highlighted: Boolean = false, onClick: () -> Unit) {
-    val fg = MaterialTheme.colorScheme.onBackground
     Box(
         Modifier.size(52.dp).clip(RoundedCornerShape(16.dp))
-            .background(if (highlighted) GlobeYellow else fg.copy(alpha = 0.1f))
+            .background(if (highlighted) GlobeYellow else Color.Black.copy(alpha = 0.35f))
             .clickable(onClick = onClick)
             .semantics { contentDescription = description; role = Role.Button },
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, contentDescription = null, tint = if (highlighted) Color.Black else fg) }
+    ) { Icon(icon, contentDescription = null, tint = if (highlighted) Color.Black else Color.White) }
 }
 
 /** Vorschau und Foto im Format 4:3 (hochkant 3:4), notfalls das nächstbeste Format der Kamera. */
