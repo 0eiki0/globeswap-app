@@ -39,6 +39,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
@@ -70,13 +71,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -86,6 +94,9 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.PhotoInfo
 import tech.eiki.globeswap.ui.editor.PhotoEditor
+import tech.eiki.globeswap.ui.theme.GlobeBlue
+import tech.eiki.globeswap.ui.theme.GlobeGradient
+import tech.eiki.globeswap.ui.theme.GlobeYellow
 import tech.eiki.globeswap.util.ImageUtils
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
@@ -264,23 +275,16 @@ private fun CameraView(
     }
 
     Column(Modifier.fillMaxSize()) {
-        // Oben: Tagesthema und Blitz auf dunklem Grund, nicht über dem Bild
-        Box(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 8.dp, vertical = 4.dp)) {
+        // Oben: Tagesthema als Leiste auf dunklem Grund, nicht über dem Bild
+        Box(Modifier.fillMaxWidth().statusBarsPadding().heightIn(min = 56.dp).padding(horizontal = 12.dp, vertical = 6.dp)) {
             if (theme.isNotBlank()) {
-                DailyTheme(theme, Modifier.align(Alignment.Center).padding(horizontal = 48.dp), joined = themeJoined, onToggle = onToggleTheme)
-            }
-            IconButton(onClick = { flashOn = !flashOn }, modifier = Modifier.align(Alignment.CenterEnd)) {
-                Icon(
-                    if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
-                    contentDescription = stringResource(R.string.flash),
-                    tint = Color.White,
-                )
+                DailyTheme(theme, Modifier.fillMaxWidth(), joined = themeJoined, onToggle = onToggleTheme)
             }
         }
 
-        // Sucher im Fotoformat 3:4 – auf kleinen Bildschirmen schmaler statt abgeschnitten
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            Box(Modifier.aspectRatio(3f / 4f).clip(RectangleShape).background(Color(0xFF1A1A1A)).testTag("viewfinder")) {
+        // Sucher im Fotoformat 3:4 mit runden Ecken – auf kleinen Bildschirmen schmaler statt abgeschnitten
+        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 8.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.aspectRatio(3f / 4f).clip(RoundedCornerShape(28.dp)).background(Color(0xFF1A1A1A)).testTag("viewfinder")) {
                 AndroidView(factory = { previewView }, modifier = Modifier.fillMaxSize())
                 // Zwei Finger: zoomen. Antippen: dort scharfstellen.
                 Box(
@@ -333,36 +337,51 @@ private fun CameraView(
             }
         }
 
-        // Unten: Auslöser und Kamera wechseln
+        // Unten: Blitz, Auslöser (weißer Ring, blauer Verlauf) und Kamera wechseln
         Row(
-            Modifier.fillMaxWidth().padding(vertical = 16.dp),
+            Modifier.fillMaxWidth().padding(vertical = 14.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Spacer(Modifier.size(48.dp))
+            CameraButton(
+                if (flashOn) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                stringResource(R.string.flash),
+                highlighted = flashOn,
+            ) { flashOn = !flashOn }
             Box(
                 Modifier
-                    .size(76.dp)
-                    .border(4.dp, Color.White, CircleShape)
-                    .padding(8.dp)
-                    .background(if (busy) Color.Gray else Color.White, CircleShape)
+                    .size(80.dp)
+                    .border(5.dp, Color.White, CircleShape)
+                    .padding(9.dp)
+                    .clip(CircleShape)
+                    .background(if (busy) SolidColor(Color.Gray) else GlobeGradient)
                     .clickable(enabled = !busy) { takePhoto() },
                 contentAlignment = Alignment.Center,
             ) {
-                if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.Black)
+                if (busy) CircularProgressIndicator(Modifier.size(28.dp), color = Color.White)
             }
-            IconButton(onClick = {
+            CameraButton(Icons.Default.FlipCameraAndroid, stringResource(R.string.switch_camera)) {
                 useWide = false
                 lensFacing = if (lensFacing == CameraSelector.LENS_FACING_BACK) {
                     CameraSelector.LENS_FACING_FRONT
                 } else {
                     CameraSelector.LENS_FACING_BACK
                 }
-            }) {
-                Icon(Icons.Default.FlipCameraAndroid, contentDescription = stringResource(R.string.switch_camera), tint = Color.White)
             }
         }
     }
+}
+
+/** Runder Knopf neben dem Auslöser (Blitz, Kamera wechseln). */
+@Composable
+private fun CameraButton(icon: ImageVector, description: String, highlighted: Boolean = false, onClick: () -> Unit) {
+    Box(
+        Modifier.size(52.dp).clip(RoundedCornerShape(16.dp))
+            .background(if (highlighted) GlobeYellow else Color.White.copy(alpha = 0.14f))
+            .clickable(onClick = onClick)
+            .semantics { contentDescription = description; role = Role.Button },
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, contentDescription = null, tint = if (highlighted) Color.Black else Color.White) }
 }
 
 /** Vorschau und Foto im Format 4:3 (hochkant 3:4), notfalls das nächstbeste Format der Kamera. */
@@ -387,23 +406,35 @@ private fun PermissionMissing(onRequest: () -> Unit) {
     }
 }
 
-/** Tagesthema vom Server als kleine Anregung über dem Kamerabild; mit [onToggle] lässt es sich antippen, um mitzumachen. */
+/**
+ * Tagesthema vom Server als Leiste über dem Kamerabild (gelbes „THEMA DES TAGES“, Thema fett);
+ * mit [onToggle] rechts ein Knopf zum Mitmachen.
+ */
 @Composable
 internal fun DailyTheme(theme: String, modifier: Modifier = Modifier, joined: Boolean = false, onToggle: (() -> Unit)? = null) {
-    Column(
+    val joinLabel = stringResource(if (joined) R.string.theme_joined else R.string.theme_join)
+    Row(
         modifier
-            .background(if (joined) Color(0xFF1E6FD9).copy(alpha = 0.85f) else Color.Black.copy(alpha = 0.5f), MaterialTheme.shapes.large)
-            .then(if (onToggle != null) Modifier.clip(MaterialTheme.shapes.large).clickable(onClick = onToggle) else Modifier)
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .clip(RoundedCornerShape(20.dp))
+            .background(if (joined) GlobeBlue.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.12f))
+            .then(if (onToggle != null) Modifier.clickable(onClick = onToggle).semantics { stateDescription = joinLabel } else Modifier)
+            .padding(start = 16.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(stringResource(R.string.todays_theme), color = Color.White.copy(alpha = 0.75f), style = MaterialTheme.typography.labelSmall)
-        Text(theme, color = Color.White, textAlign = TextAlign.Center, style = MaterialTheme.typography.titleMedium)
+        Column(Modifier.weight(1f, fill = false).padding(end = 12.dp)) {
+            Text(stringResource(R.string.todays_theme), color = GlobeYellow, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(theme, color = Color.White, style = MaterialTheme.typography.titleMedium)
+        }
         if (onToggle != null) {
+            Spacer(Modifier.weight(1f))
             Text(
-                stringResource(if (joined) R.string.theme_joined else R.string.theme_join),
-                color = Color.White.copy(alpha = if (joined) 1f else 0.75f),
-                style = MaterialTheme.typography.labelMedium,
+                stringResource(if (joined) R.string.joined_short else R.string.join_short),
+                color = if (joined) Color.White else Color.Black,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.ExtraBold,
+                modifier = Modifier
+                    .background(if (joined) Color.White.copy(alpha = 0.2f) else GlobeYellow, CircleShape)
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
             )
         }
     }

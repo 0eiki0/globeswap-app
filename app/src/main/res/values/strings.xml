@@ -12,6 +12,11 @@
     <string name="the_stranger">The stranger</string>
     <string name="chats">Chats</string>
     <string name="swap_tab">Swap</string>
+    <string name="world_tab">World</string>
+    <string name="filter_all">All</string>
+    <string name="filter_new">New · %1$d</string>
+    <string name="join_short">Join</string>
+    <string name="joined_short">Joined ✓</string>
     <string name="whats_new">What\'s new</string>
     <string name="report">Report</string>
     <string name="block">Block</string>

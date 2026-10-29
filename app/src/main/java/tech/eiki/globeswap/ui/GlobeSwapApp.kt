@@ -2,19 +2,13 @@ package tech.eiki.globeswap.ui
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.PhotoLibrary
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,8 +17,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -144,8 +138,9 @@ fun GlobeSwapApp() {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            if (route == ROUTE_SWAP || route == ROUTE_CONVERSATIONS) {
-              Column {
+            if (route == ROUTE_SWAP || route == ROUTE_CONVERSATIONS || route == ROUTE_WORLD) {
+              // Unter der Kamera schwarz, sonst wie der Hintergrund der Seite
+              Column(Modifier.background(if (route == ROUTE_SWAP) Color.Black else MaterialTheme.colorScheme.background).navigationBarsPadding()) {
                 update.available?.let { release ->
                     UpdateBanner(
                         release = release,
@@ -155,24 +150,23 @@ fun GlobeSwapApp() {
                         selfUpdate = selfUpdate,
                     )
                 }
-                NavigationBar {
-                    NavigationBarItem(
-                        selected = route == ROUTE_SWAP,
-                        onClick = { nav.switchTab(ROUTE_SWAP) },
-                        icon = { Icon(Icons.Default.CameraAlt, contentDescription = null) },
-                        label = { Text(stringResource(R.string.swap_tab)) },
-                    )
-                    NavigationBarItem(
-                        selected = route == ROUTE_CONVERSATIONS,
-                        onClick = { nav.switchTab(ROUTE_CONVERSATIONS) },
-                        icon = {
-                            BadgedBox(badge = { if (unread > 0) Badge { Text("$unread") } }) {
-                                Icon(Icons.Default.PhotoLibrary, contentDescription = null)
-                            }
-                        },
-                        label = { Text(stringResource(R.string.chats)) },
-                    )
-                }
+                FloatingNavBar(
+                    selected = when (route) {
+                        ROUTE_CONVERSATIONS -> Tab.CHATS
+                        ROUTE_WORLD -> Tab.WORLD
+                        else -> Tab.SWAP
+                    },
+                    unread = unread,
+                    onSelect = { tab ->
+                        nav.switchTab(
+                            when (tab) {
+                                Tab.CHATS -> ROUTE_CONVERSATIONS
+                                Tab.SWAP -> ROUTE_SWAP
+                                Tab.WORLD -> ROUTE_WORLD
+                            },
+                        )
+                    },
+                )
               }
             }
         },
@@ -189,7 +183,6 @@ fun GlobeSwapApp() {
                     conversations = conversations,
                     photoUrl = conversationsVm::photoUrl,
                     onOpen = { id -> nav.navigate("chat/$id") },
-                    onOpenWorld = { nav.navigate(ROUTE_WORLD) },
                     onOpenSettings = { nav.navigate(ROUTE_SETTINGS) },
                     onOpenChangelog = { nav.navigate(ROUTE_CHANGELOG) },
                     onDeleteAccount = {
@@ -212,13 +205,13 @@ fun GlobeSwapApp() {
                 ChatScreen(onBack = { nav.popBackStack() })
             }
             composable(ROUTE_SETTINGS) {
-                SettingsScreen(onBack = { nav.popBackStack() }, onOpenWorld = { nav.navigate(ROUTE_WORLD) })
+                SettingsScreen(onBack = { nav.popBackStack() }, onOpenWorld = { nav.switchTab(ROUTE_WORLD) })
             }
             composable(ROUTE_CHANGELOG) {
                 ChangelogScreen(onBack = { nav.popBackStack() })
             }
             composable(ROUTE_WORLD) {
-                WorldScreen(onBack = { nav.popBackStack() })
+                WorldScreen()
             }
         }
     }

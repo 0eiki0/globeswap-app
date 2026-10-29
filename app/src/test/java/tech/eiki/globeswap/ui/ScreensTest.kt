@@ -4,6 +4,9 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.onRoot
 import androidx.core.content.ContextCompat
 import androidx.test.core.app.ApplicationProvider
@@ -113,8 +116,14 @@ class ScreensTest {
         conversations.forEach { compose.onNodeWithText(it.label).assertExists() }
         compose.onNodeWithText("New photo for you!").assertExists()
         compose.onNodeWithText("Waiting for their photo").assertExists()
-        compose.onNodeWithText("Your turn").assertExists()
+        compose.onAllNodesWithText("Your turn").assertCountEquals(2) // Filter-Chip und Status
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/conversations.png")
+        // Filter „Neu“: nur der Chat mit neuem Foto
+        compose.onNodeWithText("New · 1").performClick()
+        compose.onNodeWithText(conversations[0].label).assertExists()
+        compose.onNodeWithText(conversations[1].label).assertDoesNotExist()
+        compose.onNodeWithText("All").performClick()
+        compose.onNodeWithText(conversations[1].label).assertExists()
     }
 
     @OptIn(ExperimentalRoborazziApi::class)

@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Fresh new look: chats as cards with filters, a new bar at the bottom with a big Swap button, and the world map as its own tab
 - While a photo waits for a swap, you can take the next one right away
 
 ## 3.4 (2026-10-28)

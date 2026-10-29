@@ -35,10 +35,10 @@ class CameraLayoutTest {
             }
         }
         compose.onNodeWithText("Your breakfast").assertExists()
-        // Sucher genau im Fotoformat 3:4 über die volle Breite
+        // Sucher genau im Fotoformat 3:4, fast über die volle Breite (8 dp Rand je Seite)
         val box = compose.onNodeWithTag("viewfinder").fetchSemanticsNode().boundsInRoot
         val root = compose.onRoot().fetchSemanticsNode().boundsInRoot
-        assertEquals(root.width, box.width, 1f)
+        assertEquals(root.width - 2 * 8 * 3f, box.width, 1f) // xxhdpi: 1 dp = 3 px
         assertEquals(4f / 3f, box.height / box.width, 0.01f)
         assertTrue("Sucher unter dem Tagesthema", box.top > compose.onNodeWithText("Your breakfast").fetchSemanticsNode().boundsInRoot.bottom)
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/camera-layout.png")
