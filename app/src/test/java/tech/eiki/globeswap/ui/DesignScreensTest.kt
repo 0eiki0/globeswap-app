@@ -9,8 +9,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
 import androidx.test.core.app.ApplicationProvider
@@ -51,11 +56,15 @@ class DesignScreensTest {
     @Before
     fun setUp() = ServiceLocator.initForTest(context, "http://127.0.0.1:9")
 
+    /** Wie in der App: Leiste schwebt über dem Inhalt, der darunter verschwommen durchscheint. */
     @Composable
-    private fun WithBar(tab: Tab, black: Boolean = false, content: @Composable () -> Unit) {
-        Column(Modifier.fillMaxSize().background(if (black) Color.Black else MaterialTheme.colorScheme.background)) {
-            Box(Modifier.weight(1f)) { content() }
-            FloatingNavBar(tab, unread = 2, onSelect = {})
+    private fun WithBar(tab: Tab, content: @Composable () -> Unit) {
+        val haze = remember { HazeState() }
+        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
+            CompositionLocalProvider(LocalBottomBarSpace provides 98.dp) {
+                Box(Modifier.fillMaxSize().hazeSource(haze)) { content() }
+            }
+            FloatingNavBar(tab, unread = 2, onSelect = {}, modifier = Modifier.align(Alignment.BottomCenter), hazeState = haze)
         }
     }
 
@@ -92,7 +101,7 @@ class DesignScreensTest {
                             WorldContent(world, WorldShapes.load(context))
                         } }
                     }
-                    else -> WithBar(Tab.SWAP, black = true) {
+                    else -> WithBar(Tab.SWAP) {
                         PhotoCapture(confirmLabel = "Swap!", onConfirm = { _, _ -> }, hint = "Take a photo – it goes to a stranger.", theme = "Your breakfast")
                     }
                 }

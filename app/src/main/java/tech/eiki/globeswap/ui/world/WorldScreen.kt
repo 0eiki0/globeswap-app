@@ -66,6 +66,7 @@ import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.World
 import tech.eiki.globeswap.data.userMessage
 import tech.eiki.globeswap.ui.AppCard
+import tech.eiki.globeswap.ui.LocalBottomBarSpace
 import tech.eiki.globeswap.ui.ScreenTitle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -135,7 +136,7 @@ internal fun WorldContent(world: World, shapes: WorldShapes) {
     val context = LocalContext.current
     val geo = remember { CountryGeo.load(context) }
     var open by remember { mutableStateOf(emptySet<AchievementCategory>()) }
-    LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    LazyColumn(contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp + LocalBottomBarSpace.current), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             AppCard {
                 Column(Modifier.padding(16.dp)) {

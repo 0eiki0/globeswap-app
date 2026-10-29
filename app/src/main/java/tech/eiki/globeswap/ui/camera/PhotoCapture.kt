@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.input.pointer.pointerInput
@@ -93,6 +94,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.PhotoInfo
+import tech.eiki.globeswap.ui.LocalBottomBarSpace
 import tech.eiki.globeswap.ui.editor.PhotoEditor
 import tech.eiki.globeswap.ui.theme.GlobeBlue
 import tech.eiki.globeswap.ui.theme.GlobeGradient
@@ -130,7 +132,8 @@ fun PhotoCapture(
     // Beim Tagesthema mitmachen: Antippen des Themas, gilt für das nächste Foto (Erfolge „Tagesthema“)
     var themeJoined by rememberSaveable { mutableStateOf(false) }
 
-    Box(modifier.fillMaxSize().background(Color.Black)) {
+    // Hintergrund folgt dem Design (hell/dunkel); unten Platz für die Leiste, damit Auslöser und Editor-Knöpfe frei bleiben
+    Box(modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(bottom = LocalBottomBarSpace.current)) {
         val photo = captured
         when {
             !hasPermission -> PermissionMissing(onRequest = { launcher.launch(Manifest.permission.CAMERA) })
@@ -153,7 +156,7 @@ fun PhotoCapture(
         }
         if (onCancel != null && photo == null) {
             IconButton(onClick = onCancel, modifier = Modifier.statusBarsPadding().padding(8.dp)) {
-                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel), tint = Color.White)
+                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel), tint = MaterialTheme.colorScheme.onBackground)
             }
         }
     }
@@ -351,7 +354,7 @@ private fun CameraView(
             Box(
                 Modifier
                     .size(80.dp)
-                    .border(5.dp, Color.White, CircleShape)
+                    .border(5.dp, MaterialTheme.colorScheme.onBackground, CircleShape)
                     .padding(9.dp)
                     .clip(CircleShape)
                     .background(if (busy) SolidColor(Color.Gray) else GlobeGradient)
@@ -375,13 +378,14 @@ private fun CameraView(
 /** Runder Knopf neben dem Auslöser (Blitz, Kamera wechseln). */
 @Composable
 private fun CameraButton(icon: ImageVector, description: String, highlighted: Boolean = false, onClick: () -> Unit) {
+    val fg = MaterialTheme.colorScheme.onBackground
     Box(
         Modifier.size(52.dp).clip(RoundedCornerShape(16.dp))
-            .background(if (highlighted) GlobeYellow else Color.White.copy(alpha = 0.14f))
+            .background(if (highlighted) GlobeYellow else fg.copy(alpha = 0.1f))
             .clickable(onClick = onClick)
             .semantics { contentDescription = description; role = Role.Button },
         contentAlignment = Alignment.Center,
-    ) { Icon(icon, contentDescription = null, tint = if (highlighted) Color.Black else Color.White) }
+    ) { Icon(icon, contentDescription = null, tint = if (highlighted) Color.Black else fg) }
 }
 
 /** Vorschau und Foto im Format 4:3 (hochkant 3:4), notfalls das nächstbeste Format der Kamera. */
@@ -398,7 +402,7 @@ private fun PermissionMissing(onRequest: () -> Unit) {
     ) {
         Text(
             stringResource(R.string.camera_needed),
-            color = Color.White,
+            color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
         )
         Spacer(Modifier.size(16.dp))
@@ -413,17 +417,31 @@ private fun PermissionMissing(onRequest: () -> Unit) {
 @Composable
 internal fun DailyTheme(theme: String, modifier: Modifier = Modifier, joined: Boolean = false, onToggle: (() -> Unit)? = null) {
     val joinLabel = stringResource(if (joined) R.string.theme_joined else R.string.theme_join)
+    // Hell: weiße Karte mit blauer Beschriftung; dunkel: Glasfläche mit gelber Beschriftung; mitgemacht: blau
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
+    val text = if (joined || dark) Color.White else MaterialTheme.colorScheme.onSurface
+    val label = when {
+        joined -> Color.White.copy(alpha = 0.8f)
+        dark -> GlobeYellow
+        else -> MaterialTheme.colorScheme.primary
+    }
     Row(
         modifier
             .clip(RoundedCornerShape(20.dp))
-            .background(if (joined) GlobeBlue.copy(alpha = 0.9f) else Color.White.copy(alpha = 0.12f))
+            .background(
+                when {
+                    joined -> GlobeBlue.copy(alpha = 0.9f)
+                    dark -> Color.White.copy(alpha = 0.12f)
+                    else -> MaterialTheme.colorScheme.surfaceContainerLowest
+                },
+            )
             .then(if (onToggle != null) Modifier.clickable(onClick = onToggle).semantics { stateDescription = joinLabel } else Modifier)
             .padding(start = 16.dp, end = 10.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f, fill = false).padding(end = 12.dp)) {
-            Text(stringResource(R.string.todays_theme), color = GlobeYellow, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
-            Text(theme, color = Color.White, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.todays_theme), color = label, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+            Text(theme, color = text, style = MaterialTheme.typography.titleMedium)
         }
         if (onToggle != null) {
             Spacer(Modifier.weight(1f))

@@ -2,22 +2,28 @@ package tech.eiki.globeswap.ui
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.dp
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -135,43 +141,15 @@ fun GlobeSwapApp() {
     val unread = conversations.count { it.unread }
     val route = nav.currentBackStackEntryAsState().value?.destination?.route
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        bottomBar = {
-            if (route == ROUTE_SWAP || route == ROUTE_CONVERSATIONS || route == ROUTE_WORLD) {
-              // Unter der Kamera schwarz, sonst wie der Hintergrund der Seite
-              Column(Modifier.background(if (route == ROUTE_SWAP) Color.Black else MaterialTheme.colorScheme.background).navigationBarsPadding()) {
-                update.available?.let { release ->
-                    UpdateBanner(
-                        release = release,
-                        channel = updates.channel,
-                        onUpdate = { updates.openUpdate(context) },
-                        onLater = { updates.dismiss(release.versionCode) },
-                        selfUpdate = selfUpdate,
-                    )
-                }
-                FloatingNavBar(
-                    selected = when (route) {
-                        ROUTE_CONVERSATIONS -> Tab.CHATS
-                        ROUTE_WORLD -> Tab.WORLD
-                        else -> Tab.SWAP
-                    },
-                    unread = unread,
-                    onSelect = { tab ->
-                        nav.switchTab(
-                            when (tab) {
-                                Tab.CHATS -> ROUTE_CONVERSATIONS
-                                Tab.SWAP -> ROUTE_SWAP
-                                Tab.WORLD -> ROUTE_WORLD
-                            },
-                        )
-                    },
-                )
-              }
-            }
-        },
-    ) { padding ->
-        NavHost(nav, startDestination = ROUTE_SWAP, modifier = Modifier.padding(padding)) {
+    // Leiste unten schwebt über dem Inhalt (Glas-Effekt); die Seiten lassen unten so viel Platz, wie sie hoch ist.
+    val hazeState = remember { HazeState() }
+    val showBar = route == ROUTE_SWAP || route == ROUTE_CONVERSATIONS || route == ROUTE_WORLD
+    var barHeight by remember { mutableStateOf(0.dp) }
+    val density = LocalDensity.current
+    Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+      Box(Modifier.fillMaxSize()) {
+        CompositionLocalProvider(LocalBottomBarSpace provides if (showBar) barHeight else 0.dp) {
+        NavHost(nav, startDestination = ROUTE_SWAP, modifier = Modifier.fillMaxSize().hazeSource(hazeState)) {
             composable(ROUTE_SWAP) {
                 SwapScreen(onMatched = { id -> nav.navigate("chat/$id") })
             }
@@ -214,6 +192,44 @@ fun GlobeSwapApp() {
                 WorldScreen()
             }
         }
+        }
+        if (showBar) {
+            Column(
+                // Höhe samt Systemleiste messen (onSizeChanged vor dem Abstand)
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                    .onSizeChanged { barHeight = with(density) { it.height.toDp() } }
+                    .navigationBarsPadding(),
+            ) {
+                update.available?.let { release ->
+                    UpdateBanner(
+                        release = release,
+                        channel = updates.channel,
+                        onUpdate = { updates.openUpdate(context) },
+                        onLater = { updates.dismiss(release.versionCode) },
+                        selfUpdate = selfUpdate,
+                    )
+                }
+                FloatingNavBar(
+                    selected = when (route) {
+                        ROUTE_CONVERSATIONS -> Tab.CHATS
+                        ROUTE_WORLD -> Tab.WORLD
+                        else -> Tab.SWAP
+                    },
+                    unread = unread,
+                    hazeState = hazeState,
+                    onSelect = { tab ->
+                        nav.switchTab(
+                            when (tab) {
+                                Tab.CHATS -> ROUTE_CONVERSATIONS
+                                Tab.SWAP -> ROUTE_SWAP
+                                Tab.WORLD -> ROUTE_WORLD
+                            },
+                        )
+                    },
+                )
+            }
+        }
+      }
     }
 }
 

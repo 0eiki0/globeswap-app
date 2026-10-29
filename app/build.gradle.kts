@@ -105,6 +105,8 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
+    // Glas-Effekt (Unschärfe hinter der Leiste unten), Apache 2.0; 1.2.x passt zu Compose 1.7
+    implementation("dev.chrisbanes.haze:haze:1.2.2")
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 

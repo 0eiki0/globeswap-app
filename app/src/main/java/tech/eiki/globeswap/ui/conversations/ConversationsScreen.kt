@@ -50,6 +50,7 @@ import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.Countries
 import tech.eiki.globeswap.data.displayName
 import tech.eiki.globeswap.ui.AppCard
+import tech.eiki.globeswap.ui.LocalBottomBarSpace
 import tech.eiki.globeswap.ui.ScreenTitle
 import tech.eiki.globeswap.ui.StrangerId
 
@@ -137,7 +138,7 @@ fun ConversationsScreen(
         }
         LazyColumn(
             Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp + LocalBottomBarSpace.current),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             items(shown, key = { it.id }) { conversation -> ChatCard(conversation, photoUrl) { onOpen(conversation.id) } }

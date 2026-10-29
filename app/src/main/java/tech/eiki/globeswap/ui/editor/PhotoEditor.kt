@@ -165,7 +165,7 @@ fun PhotoEditor(
         }
     }
 
-    Box(Modifier.fillMaxSize().background(Color.Black)) {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
         // ---------------------------------------------------------------- Foto mit Ebenen
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             BoxWithConstraints(Modifier.aspectRatio(source.width.toFloat() / source.height)) {
@@ -412,7 +412,7 @@ fun PhotoEditor(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    TextButton(onClick = onRetake) { Text(stringResource(R.string.retake), color = Color.White) }
+                    TextButton(onClick = onRetake) { Text(stringResource(R.string.retake), color = MaterialTheme.colorScheme.onBackground) }
                     Button(onClick = ::export, enabled = !exporting) {
                         if (exporting) {
                             CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
