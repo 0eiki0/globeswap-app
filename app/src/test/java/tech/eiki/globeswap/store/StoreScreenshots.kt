@@ -32,7 +32,18 @@ import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
-import tech.eiki.globeswap.data.Conversation
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.ServiceLocator
+import tech.eiki.globeswap.ui.ScreenTitle
+import tech.eiki.globeswap.ui.Tab
+import tech.eiki.globeswap.ui.world.WorldContent
+import tech.eiki.globeswap.ui.world.WorldShapes
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.editor.PhotoEditor
 import tech.eiki.globeswap.ui.onboarding.OnboardingScreen
@@ -100,19 +111,32 @@ class StoreScreenshots {
             scenes.forEachIndexed { i, bmp -> intercept("scene$i", BitmapDrawable(context.resources, bmp)) }
         }.build()
         Coil.setImageLoader(ImageLoader.Builder(context).components { add(engine) }.build())
-        val now = System.currentTimeMillis()
-        val ids = listOf(
-            "3f2a1c9e-7b4d-4e0a-9c1f-2d8e6b5a4c3f", "b81e0d47-52c6-4f39-a8d2-91c7e3f04b5a", "0c9d5e6f-1a2b-4c3d-8e4f-5a6b7c8d9e0f",
-            "7d41a9c2-3e8f-4b6a-9d0c-1f2e3a4b5c6d", "e5f60718-293a-4b4c-8d5e-6f708192a3b4",
-        )
-        val conversations = ids.mapIndexed { i, id ->
-            Conversation("c$i", id, now - listOf(2, 14, 55, 190, 900)[i] * 60_000L, i % 2 == 1, "scene$i", unread = i < 2, blocked = false)
-        }
+        val conversations = sampleConversations()
         compose.setContent {
-            GlobeSwapTheme { ConversationsScreen(conversations, photoUrl = { it }, onOpen = {}, onDeleteAccount = {}) }
+            GlobeSwapTheme { ScreenWithBar(Tab.CHATS) { ConversationsScreen(conversations, photoUrl = { it }, onOpen = {}, onDeleteAccount = {}) } }
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("$OUT/2-chats.png")
+    }
+
+    @Test
+    fun world() {
+        val context = ApplicationProvider.getApplicationContext<Application>()
+        ServiceLocator.initForTest(context, "http://127.0.0.1:9")
+        compose.setContent {
+            GlobeSwapTheme {
+                ScreenWithBar(Tab.WORLD) {
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        Column(Modifier.statusBarsPadding()) {
+                            ScreenTitle(stringResource(R.string.your_world))
+                            WorldContent(sampleWorld(), WorldShapes.load(context))
+                        }
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onRoot().captureRoboImage("$OUT/5-world.png")
     }
 
     @Test

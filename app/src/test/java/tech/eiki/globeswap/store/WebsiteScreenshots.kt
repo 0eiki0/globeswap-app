@@ -3,7 +3,12 @@ package tech.eiki.globeswap.store
 import android.app.Application
 import android.graphics.drawable.BitmapDrawable
 import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.hasSetTextAction
@@ -34,6 +39,8 @@ import tech.eiki.globeswap.data.Conversation
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.World
 import tech.eiki.globeswap.data.WorldCountry
+import tech.eiki.globeswap.ui.ScreenTitle
+import tech.eiki.globeswap.ui.Tab
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.editor.PhotoEditor
 import tech.eiki.globeswap.ui.theme.GlobeSwapTheme
@@ -97,7 +104,7 @@ abstract class WebsiteScreenshots(private val lang: String) {
             )
         }
         compose.setContent {
-            GlobeSwapTheme { ConversationsScreen(conversations, photoUrl = { it }, onOpen = {}, onDeleteAccount = {}) }
+            GlobeSwapTheme { ScreenWithBar(Tab.CHATS) { ConversationsScreen(conversations, photoUrl = { it }, onOpen = {}, onDeleteAccount = {}) } }
         }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("$WEB_OUT/$lang-chats.png")
@@ -115,7 +122,18 @@ abstract class WebsiteScreenshots(private val lang: String) {
             percentile = 85,
             achievements = AchievementData(home = "DE"),
         )
-        compose.setContent { GlobeSwapTheme { Surface { WorldContent(world, WorldShapes.load(context)) } } }
+        compose.setContent {
+            GlobeSwapTheme {
+                ScreenWithBar(Tab.WORLD) {
+                    Surface(color = MaterialTheme.colorScheme.background) {
+                        Column(Modifier.statusBarsPadding()) {
+                            ScreenTitle(stringResource(R.string.your_world))
+                            WorldContent(world, WorldShapes.load(context))
+                        }
+                    }
+                }
+            }
+        }
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("$WEB_OUT/$lang-world.png")
     }
