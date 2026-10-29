@@ -138,7 +138,7 @@ class PhotoEditorTest {
         // Filter wählen
         compose.onNodeWithContentDescription("Filters").performClick()
         compose.onRoot().captureRoboImage("$OUT/4-filters.png")
-        compose.onNodeWithContentDescription("Vintage").performClick()
+        compose.onNodeWithContentDescription("Golden").performClick()
         compose.onNodeWithContentDescription("Filters").performClick()
         compose.onRoot().captureRoboImage("$OUT/5-edited.png")
 

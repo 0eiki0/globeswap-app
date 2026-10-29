@@ -5,6 +5,9 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- 8 new filter looks: Golden, Film, Cinema, Matte, Dreamy, Retro, Duotone and Night – with glow, film grain and vignette
+- Frames for your photos: Polaroid, Postcard, Airmail, Film and Color pop
+- Add the current time to your photo – move it, resize it and tap it to switch between 4 styles
 - Bigger camera: the preview now fills the screen down to the bottom bar – and your photo looks exactly like the preview
 
 ## 3.5 (2026-10-29)

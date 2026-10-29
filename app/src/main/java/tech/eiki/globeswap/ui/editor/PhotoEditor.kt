@@ -48,7 +48,9 @@ import androidx.compose.material.icons.filled.Brush
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.EmojiEmotions
+import androidx.compose.material.icons.filled.FilterFrames
 import androidx.compose.material.icons.filled.OpenInFull
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -62,6 +64,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -73,8 +76,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
@@ -88,6 +90,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.res.stringResource
@@ -103,12 +106,14 @@ import androidx.compose.ui.unit.sp
 import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.PhotoInfo
 import tech.eiki.globeswap.util.ImageUtils
+import android.text.format.DateFormat
+import java.util.Calendar
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-private enum class Tool { NONE, DRAW, FILTER }
+private enum class Tool { NONE, DRAW, FILTER, FRAME }
 
 /** Unterhalb dieser Höhe (relativ zum Bild) wird ein Sticker beim Loslassen gelöscht. */
 private const val TRASH_ZONE = 0.86f
@@ -129,6 +134,21 @@ fun PhotoEditor(
     val thumbnail = remember(source) { thumbnailOf(source) }
     val state = remember(jpeg) { EditorState() }
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    // Uhrzeit für den Uhrzeit-Sticker: beim Öffnen des Editors, also kurz nach dem Foto
+    val now = remember(jpeg) { Calendar.getInstance() }
+    val is24h = remember { DateFormat.is24HourFormat(context) }
+    val hereFormat = stringResource(R.string.time_here)
+    fun timeText(style: TimeStyle) = TimeSticker.text(style, now, is24h, hereFormat)
+
+    // Vorschau des Filters: auf einer verkleinerten Kopie berechnet, damit es flüssig bleibt
+    val previewSource = remember(source) { scaledTo(source, 1440) }
+    var filtered by remember { mutableStateOf<Pair<PhotoFilter, Bitmap>?>(null) }
+    LaunchedEffect(state.filter) {
+        val look = state.filter.look ?: return@LaunchedEffect
+        val bmp = withContext(Dispatchers.Default) { LookRenderer.apply(previewSource, look) }
+        filtered = state.filter to bmp
+    }
 
     var tool by remember { mutableStateOf(Tool.NONE) }
     var brushColor by remember { mutableStateOf(EditorColors[2]) }
@@ -153,12 +173,13 @@ fun PhotoEditor(
         exporting = true
         scope.launch {
             val result = withContext(Dispatchers.Default) {
-                val edited = state.strokes.isNotEmpty() || state.stickers.isNotEmpty() || state.filter != PhotoFilter.ORIGINAL
+                val edited = state.strokes.isNotEmpty() || state.stickers.isNotEmpty() || state.filter != PhotoFilter.ORIGINAL ||
+                    state.frame != PhotoFrame.NONE
                 if (edited) ImageUtils.encodeJpeg(EditorRenderer.render(source, state)) else jpeg
             }
             exporting = false
             val info = PhotoInfo(
-                edited = state.strokes.isNotEmpty() || state.stickers.isNotEmpty(),
+                edited = state.strokes.isNotEmpty() || state.stickers.isNotEmpty() || state.frame != PhotoFrame.NONE,
                 filter = state.filter.takeIf { it != PhotoFilter.ORIGINAL }?.name,
             )
             onConfirm(result, info)
@@ -172,13 +193,19 @@ fun PhotoEditor(
                 val boxW = constraints.maxWidth.toFloat()
                 val boxH = constraints.maxHeight.toFloat()
 
+                val shown = filtered?.takeIf { state.filter != PhotoFilter.ORIGINAL }?.second ?: source
                 Image(
-                    bitmap = remember(source) { source.asImageBitmap() },
+                    bitmap = remember(shown) { shown.asImageBitmap() },
                     contentDescription = stringResource(R.string.photo),
                     contentScale = ContentScale.FillBounds,
-                    colorFilter = state.filter.matrix?.let { ColorFilter.colorMatrix(ColorMatrix(it)) },
                     modifier = Modifier.fillMaxSize(),
                 )
+                // Rahmen über dem Foto, unter Zeichnungen und Stickern
+                if (state.frame != PhotoFrame.NONE) {
+                    Canvas(Modifier.fillMaxSize()) {
+                        drawIntoCanvas { FrameRenderer.draw(it.nativeCanvas, state.frame, boxW, boxH, state.frameDate) }
+                    }
+                }
 
                 val currentStroke = remember { mutableStateListOf<Offset>() }
                 Canvas(Modifier.fillMaxSize()) {
@@ -194,9 +221,9 @@ fun PhotoEditor(
                 val density = LocalDensity.current
                 val pad = with(density) { 10.dp.toPx() }
                 val handleRadius = with(density) { 15.dp.toPx() }
-                val layouts = remember(boxW) { HashMap<Triple<StickerKind, String, Int>, StaticLayout>() }
+                val layouts = remember(boxW) { HashMap<String, StaticLayout>() }
                 fun layoutOf(sticker: Sticker) =
-                    layouts.getOrPut(Triple(sticker.kind, sticker.text, sticker.color.toArgb())) { EditorRenderer.stickerLayout(sticker, boxW) }
+                    layouts.getOrPut("${sticker.kind}|${sticker.timeStyle}|${sticker.color.toArgb()}|${sticker.text}") { EditorRenderer.stickerLayout(sticker, boxW) }
                 fun boxOf(sticker: Sticker) = layoutOf(sticker).let { stickerBox(sticker, it.width, it.height, boxW, boxH) }
 
                 state.stickers.forEach { sticker -> StickerView(sticker, layoutOf(sticker), boxW, boxH) }
@@ -223,7 +250,8 @@ fun PhotoEditor(
                     FrameButton(box.corner(-1f, -1f, pad), handleRadius, Icons.Default.Close, stringResource(R.string.remove), Color(0xFFFF3B30))
                     if (draggingSticker == null) {
                         Text(
-                            stringResource(R.string.resize_hint),
+                            stringResource(R.string.resize_hint) +
+                                if (selected.kind == StickerKind.TIME) "\n" + stringResource(R.string.time_hint) else "",
                             color = Color.White,
                             style = MaterialTheme.typography.labelMedium,
                             textAlign = TextAlign.Center,
@@ -325,6 +353,10 @@ fun PhotoEditor(
                                     mode == GestureMode.STICKER && hit != null ->
                                         if (hit.id == selectedId && hit.kind == StickerKind.TEXT) {
                                             textEditing = TextDraft(hit.id, hit.text, hit.color)
+                                        } else if (hit.id == selectedId && hit.kind == StickerKind.TIME) {
+                                            // Antippen wechselt den Stil der Uhrzeit
+                                            val style = TimeSticker.next(hit.timeStyle)
+                                            state.updateSticker(hit.id) { it.copy(timeStyle = style, text = timeText(style)) }
                                         } else {
                                             selectedId = hit.id
                                         }
@@ -394,8 +426,15 @@ fun PhotoEditor(
                         tool = Tool.NONE
                         showEmojis = true
                     }
+                    RoundButton(Icons.Default.Schedule, stringResource(R.string.add_time)) {
+                        tool = Tool.NONE
+                        selectedId = state.addSticker(StickerKind.TIME, timeText(TimeStyle.DIGITAL), Color.White, Offset(0.5f, 0.3f))
+                    }
                     RoundButton(Icons.Default.AutoAwesome, stringResource(R.string.filters), selected = tool == Tool.FILTER) {
                         tool = if (tool == Tool.FILTER) Tool.NONE else Tool.FILTER
+                    }
+                    RoundButton(Icons.Default.FilterFrames, stringResource(R.string.frames), selected = tool == Tool.FRAME) {
+                        tool = if (tool == Tool.FRAME) Tool.NONE else Tool.FRAME
                     }
                     if (state.canUndo) RoundButton(Icons.AutoMirrored.Filled.Undo, stringResource(R.string.undo), onClick = state::undo)
                 }
@@ -405,6 +444,7 @@ fun PhotoEditor(
                 when (tool) {
                     Tool.DRAW -> DrawPanel(brushColor, { brushColor = it }, brushSize, { brushSize = it })
                     Tool.FILTER -> FilterPanel(thumbnail, state.filter) { state.filter = it }
+                    Tool.FRAME -> FramePanel(thumbnail, state.frame, state.frameDate) { state.frame = it }
                     Tool.NONE -> Unit
                 }
                 Row(
@@ -472,7 +512,11 @@ private fun StickerView(sticker: Sticker, layout: StaticLayout, boxW: Float, box
     val density = LocalDensity.current
     val w = layout.width * sticker.scale
     val h = layout.height * sticker.scale
-    val kind = if (sticker.kind == StickerKind.TEXT) stringResource(R.string.kind_text) else stringResource(R.string.kind_sticker)
+    val kind = when (sticker.kind) {
+        StickerKind.TEXT -> stringResource(R.string.kind_text)
+        StickerKind.TIME -> stringResource(R.string.kind_time)
+        StickerKind.EMOJI -> stringResource(R.string.kind_sticker)
+    }
     val desc = stringResource(R.string.sticker_desc, kind, sticker.text)
     val stateDesc = stringResource(R.string.sticker_state, (sticker.scale * 100).roundToInt(), normalizedDegrees(sticker.rotation))
     Canvas(
@@ -589,29 +633,62 @@ private fun DrawPanel(color: Color, onColor: (Color) -> Unit, size: BrushSize, o
 
 @Composable
 private fun FilterPanel(thumbnail: Bitmap, selected: PhotoFilter, onSelect: (PhotoFilter) -> Unit) {
-    val image = remember(thumbnail) { thumbnail.asImageBitmap() }
+    // Vorschaubilder aller Looks einmal im Hintergrund berechnen
+    val thumbs = remember(thumbnail) { mutableStateMapOf<PhotoFilter, ImageBitmap>() }
+    LaunchedEffect(thumbnail) {
+        PhotoFilter.entries.forEach { f ->
+            if (f !in thumbs) {
+                thumbs[f] = withContext(Dispatchers.Default) { (f.look?.let { LookRenderer.apply(thumbnail, it) } ?: thumbnail).asImageBitmap() }
+            }
+        }
+    }
+    val plain = remember(thumbnail) { thumbnail.asImageBitmap() }
+    ChoiceRow(PhotoFilter.entries, selected, onSelect, label = { stringResource(it.label) }) { thumbs[it] ?: plain }
+}
+
+@Composable
+private fun FramePanel(thumbnail: Bitmap, selected: PhotoFrame, date: String, onSelect: (PhotoFrame) -> Unit) {
+    val thumbs = remember(thumbnail) {
+        PhotoFrame.entries.associateWith { frame ->
+            val bmp = thumbnail.copy(Bitmap.Config.ARGB_8888, true)
+            FrameRenderer.draw(android.graphics.Canvas(bmp), frame, bmp.width.toFloat(), bmp.height.toFloat(), date)
+            bmp.asImageBitmap()
+        }
+    }
+    ChoiceRow(PhotoFrame.entries, selected, onSelect, label = { stringResource(it.label) }) { thumbs.getValue(it) }
+}
+
+/** Waagerechte Auswahl mit Vorschaubild und Namen (Filter, Rahmen). */
+@Composable
+private fun <T> ChoiceRow(
+    entries: List<T>,
+    selected: T,
+    onSelect: (T) -> Unit,
+    label: @Composable (T) -> String,
+    image: (T) -> ImageBitmap,
+) {
     LazyRow(
         Modifier.fillMaxWidth().background(Color.Black.copy(alpha = 0.45f)).padding(vertical = 10.dp),
         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        items(PhotoFilter.entries) { filter ->
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onSelect(filter) }) {
+        items(entries) { entry ->
+            val name = label(entry)
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.clickable { onSelect(entry) }) {
                 Image(
-                    bitmap = image,
-                    contentDescription = stringResource(filter.label),
+                    bitmap = image(entry),
+                    contentDescription = name,
                     contentScale = ContentScale.Crop,
-                    colorFilter = filter.matrix?.let { ColorFilter.colorMatrix(ColorMatrix(it)) },
                     modifier = Modifier
                         .size(60.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .border(
-                            if (filter == selected) 3.dp else 0.dp,
-                            if (filter == selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                            if (entry == selected) 3.dp else 0.dp,
+                            if (entry == selected) MaterialTheme.colorScheme.primary else Color.Transparent,
                             RoundedCornerShape(12.dp),
                         ),
                 )
-                Text(stringResource(filter.label), color = Color.White, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
+                Text(name, color = Color.White, style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(top = 4.dp))
             }
         }
     }
@@ -657,6 +734,13 @@ private fun TextInput(draft: TextDraft, onDone: (String, Color) -> Unit) {
             ColorRow(color) { color = it }
         }
     }
+}
+
+/** Verkleinerte Kopie mit höchstens [maxEdge] Pixeln an der längeren Seite. */
+private fun scaledTo(source: Bitmap, maxEdge: Int): Bitmap {
+    val scale = maxEdge.toFloat() / maxOf(source.width, source.height)
+    if (scale >= 1f) return source
+    return Bitmap.createScaledBitmap(source, (source.width * scale).roundToInt().coerceAtLeast(1), (source.height * scale).roundToInt().coerceAtLeast(1), true)
 }
 
 private fun thumbnailOf(source: Bitmap): Bitmap {

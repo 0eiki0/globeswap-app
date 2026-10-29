@@ -2,7 +2,6 @@ package tech.eiki.globeswap.ui.editor
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Typeface
@@ -12,18 +11,17 @@ import android.text.TextPaint
 import androidx.compose.ui.graphics.toArgb
 import kotlin.math.ceil
 
-/** Rechnet Filter, Zeichnungen und Sticker in voller Auflösung in das Foto ein. */
+/** Rechnet Filter, Rahmen, Zeichnungen und Sticker in voller Auflösung in das Foto ein. */
 object EditorRenderer {
 
     fun render(source: Bitmap, state: EditorState): Bitmap {
         val w = source.width.toFloat()
         val h = source.height.toFloat()
-        val out = Bitmap.createBitmap(source.width, source.height, Bitmap.Config.ARGB_8888)
+        val out = state.filter.look?.let { LookRenderer.apply(source, it) }
+            ?: source.copy(Bitmap.Config.ARGB_8888, true)
         val canvas = Canvas(out)
 
-        val photoPaint = Paint(Paint.FILTER_BITMAP_FLAG)
-        state.filter.matrix?.let { photoPaint.colorFilter = ColorMatrixColorFilter(it) }
-        canvas.drawBitmap(source, 0f, 0f, photoPaint)
+        FrameRenderer.draw(canvas, state.frame, w, h, state.frameDate)
 
         for (stroke in state.strokes.toList()) drawStroke(canvas, stroke, w, h)
 
@@ -52,7 +50,7 @@ object EditorRenderer {
         canvas.drawPath(stroke.toPath(w, h), paint)
     }
 
-    /** Text bzw. Emoji als fertig umbrochenes Layout; [imageWidth] bestimmt die Schriftgröße. */
+    /** Text, Emoji oder Uhrzeit als fertig umbrochenes Layout; [imageWidth] bestimmt die Schriftgröße. */
     fun stickerLayout(sticker: Sticker, imageWidth: Float): StaticLayout {
         val emoji = sticker.kind == StickerKind.EMOJI
         val paint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
@@ -61,6 +59,22 @@ object EditorRenderer {
             if (!emoji) {
                 typeface = Typeface.DEFAULT_BOLD
                 setShadowLayer(textSize * 0.08f, 0f, textSize * 0.04f, 0x99000000.toInt())
+            }
+            if (sticker.kind == StickerKind.TIME) when (sticker.timeStyle) {
+                TimeStyle.DIGITAL -> {
+                    textSize = TEXT_SIZE * 2.2f * imageWidth
+                    letterSpacing = -0.02f
+                    setShadowLayer(textSize * 0.06f, 0f, textSize * 0.03f, 0x99000000.toInt())
+                }
+                TimeStyle.RETRO -> {
+                    // orange Leuchtziffern wie der Datumsstempel alter Kameras
+                    textSize = TEXT_SIZE * 0.85f * imageWidth
+                    typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                    color = 0xFFFF9F1C.toInt()
+                    setShadowLayer(textSize * 0.3f, 0f, 0f, 0xCCFF6A00.toInt())
+                }
+                TimeStyle.CLOCK -> textSize = TEXT_SIZE * 1.05f * imageWidth
+                TimeStyle.HERE -> textSize = TEXT_SIZE * 0.95f * imageWidth
             }
         }
         val width = ceil(sticker.text.split('\n').maxOf { paint.measureText(it) }).toInt().coerceAtLeast(1)
