@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Shader
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
@@ -73,6 +74,13 @@ class PhotoEditorTest {
     @Test
     fun rendererDrawsFilterStrokesAndStickers() {
         val source = BitmapFactory.decodeByteArray(testPhoto(), 0, testPhoto().size)
+        // eigener Snapshot, damit keine offene Änderung im globalen Snapshot hängen bleibt (siehe LooksFramesTimeTest)
+        val snapshot = Snapshot.takeMutableSnapshot()
+        snapshot.enter { runRendererChecks(source) }
+        snapshot.dispose()
+    }
+
+    private fun runRendererChecks(source: Bitmap) {
         val state = EditorState().apply {
             filter = PhotoFilter.MONO
             addStroke(Stroke(listOf(Offset(0.1f, 0.5f), Offset(0.9f, 0.5f)), Color(0xFFFF3B30), BrushSize.LARGE.width))

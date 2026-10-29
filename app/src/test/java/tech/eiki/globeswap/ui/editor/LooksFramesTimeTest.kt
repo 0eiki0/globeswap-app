@@ -4,6 +4,7 @@ import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import org.junit.Assert.assertEquals
@@ -78,14 +79,17 @@ class LooksFramesTimeTest {
     fun renderedPhotoWithEverything() {
         val src = Bitmap.createScaledBitmap(Scenes.mountains(), 900, 1600, true)
         val now = Calendar.getInstance().apply { set(2026, Calendar.OCTOBER, 29, 7, 4) }
-        val state = EditorState().apply {
-            filter = PhotoFilter.FILM
-            frame = PhotoFrame.POSTCARD
-        }
+        // Zustand des Editors nur in einem eigenen Snapshot ändern – sonst bleibt eine offene Änderung im globalen
+        // Snapshot hängen und spätere Compose-Tests werden nie „idle“.
         val tiles = TimeStyle.entries.map { style ->
-            state.stickers.clear()
-            state.addSticker(StickerKind.TIME, TimeSticker.text(style, now, true, "It's %1\$s here", Locale.ENGLISH), Color.White, Offset(0.45f, 0.7f), style)
-            EditorRenderer.render(src, state).also { assertEquals(900, it.width); assertEquals(1600, it.height) }
+            Snapshot.withMutableSnapshot {
+                val state = EditorState().apply {
+                    filter = PhotoFilter.FILM
+                    frame = PhotoFrame.POSTCARD
+                    addSticker(StickerKind.TIME, TimeSticker.text(style, now, true, "It's %1\$s here", Locale.ENGLISH), Color.White, Offset(0.45f, 0.7f), style)
+                }
+                EditorRenderer.render(src, state).also { assertEquals(900, it.width); assertEquals(1600, it.height) }
+            }
         }
         sheet(tiles.map { Bitmap.createScaledBitmap(it, 300, 533, true) }, "editor-time.png")
     }

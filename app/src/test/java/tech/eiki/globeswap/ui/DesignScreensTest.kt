@@ -13,8 +13,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.hazeSource
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onRoot
@@ -39,6 +37,7 @@ import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.data.World
 import tech.eiki.globeswap.data.WorldCountry
 import tech.eiki.globeswap.store.Scenes
+import tech.eiki.globeswap.store.ScreenWithBar
 import tech.eiki.globeswap.ui.camera.PhotoCapture
 import tech.eiki.globeswap.ui.conversations.ConversationsScreen
 import tech.eiki.globeswap.ui.theme.GlobeSwapTheme
@@ -56,17 +55,8 @@ class DesignScreensTest {
     @Before
     fun setUp() = ServiceLocator.initForTest(context, "http://127.0.0.1:9")
 
-    /** Wie in der App: Leiste schwebt über dem Inhalt, der darunter verschwommen durchscheint. */
     @Composable
-    private fun WithBar(tab: Tab, content: @Composable () -> Unit) {
-        val haze = remember { HazeState() }
-        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-            CompositionLocalProvider(LocalBottomBarSpace provides 98.dp) {
-                Box(Modifier.fillMaxSize().hazeSource(haze)) { content() }
-            }
-            FloatingNavBar(tab, unread = 2, onSelect = {}, modifier = Modifier.align(Alignment.BottomCenter), hazeState = haze)
-        }
-    }
+    private fun WithBar(tab: Tab, content: @Composable () -> Unit) = ScreenWithBar(tab, content = content)
 
     @OptIn(ExperimentalCoilApi::class)
     private fun shots(dark: Boolean) {
