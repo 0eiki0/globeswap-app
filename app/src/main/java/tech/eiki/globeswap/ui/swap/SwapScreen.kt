@@ -26,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import tech.eiki.globeswap.R
+import tech.eiki.globeswap.data.PhotoInfo
 import tech.eiki.globeswap.data.ServiceLocator
 import tech.eiki.globeswap.ui.camera.PhotoCapture
 
@@ -40,25 +41,38 @@ fun SwapScreen(onMatched: (String) -> Unit, vm: SwapViewModel = viewModel()) {
         onMatched(matched.conversationId)
     }
 
+    SwapContent(state, theme, vm::swap, vm::cancelWaiting, vm::takeAnother, vm::reset)
+}
+
+@Composable
+internal fun SwapContent(
+    state: SwapUiState,
+    theme: String,
+    onSwap: (ByteArray, PhotoInfo) -> Unit,
+    onTakeBack: () -> Unit,
+    onTakeAnother: () -> Unit,
+    onReset: () -> Unit,
+) {
     when (val s = state) {
         SwapUiState.Capturing -> PhotoCapture(
             confirmLabel = stringResource(R.string.swap_confirm),
-            onConfirm = { jpeg, info -> vm.swap(jpeg, info) },
+            onConfirm = onSwap,
             hint = stringResource(R.string.swap_hint),
             theme = theme,
         )
         SwapUiState.Sending -> StatusPanel(title = stringResource(R.string.swap_sending), loading = true)
         is SwapUiState.Waiting -> StatusPanel(
             title = stringResource(R.string.swap_waiting),
-            text = stringResource(R.string.swap_waiting_text),
+            text = stringResource(R.string.swap_waiting_text) + "\n\n" + stringResource(R.string.swap_waiting_more),
             loading = true,
-            secondary = stringResource(R.string.take_back) to vm::cancelWaiting,
+            primary = stringResource(R.string.take_another) to onTakeAnother,
+            secondary = stringResource(R.string.take_back) to onTakeBack,
         )
         is SwapUiState.Failed -> StatusPanel(
             title = stringResource(R.string.swap_failed),
             text = s.message,
-            primary = stringResource(R.string.try_again) to { vm.swap(s.jpeg, s.info) },
-            secondary = stringResource(R.string.new_photo) to vm::reset,
+            primary = stringResource(R.string.try_again) to { onSwap(s.jpeg, s.info) },
+            secondary = stringResource(R.string.new_photo) to onReset,
         )
         is SwapUiState.Matched -> StatusPanel(title = stringResource(R.string.its_a_match), loading = true)
     }

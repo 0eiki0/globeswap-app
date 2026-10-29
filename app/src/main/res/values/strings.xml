@@ -191,6 +191,8 @@
     <string name="swap_waiting">Waiting for a stranger…</string>
     <string name="swap_waiting_text">Nobody else is taking a photo right now. As soon as someone somewhere in the world does, you swap. Feel free to close the app – the swap will show up under Chats.</string>
     <string name="take_back">Take back</string>
+    <string name="take_another">Take another photo</string>
+    <string name="swap_waiting_more">You can already take your next photo – this one stays in the queue.</string>
     <string name="swap_failed">That didn\'t work</string>
     <string name="new_photo">New photo</string>
     <string name="its_a_match">It\'s a match!</string>

@@ -73,6 +73,16 @@ class SwapViewModel : ViewModel() {
         viewModelScope.launch { runCatching { repo.cancelWaiting(waiting.photoId) } }
     }
 
+    /**
+     * Zurück zur Kamera, das Foto bleibt in der Warteschlange (der Server erlaubt mehrere wartende Fotos).
+     * Wir beobachten es hier nicht weiter – der Tausch erscheint unter Chats und als Benachrichtigung.
+     */
+    fun takeAnother() {
+        if (_state.value !is SwapUiState.Waiting) return
+        waitJob?.cancel()
+        _state.value = SwapUiState.Capturing
+    }
+
     fun reset() {
         waitJob?.cancel()
         _state.value = SwapUiState.Capturing

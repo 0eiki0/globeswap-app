@@ -190,6 +190,8 @@
     <string name="swap_waiting">Warte auf einen Stranger…</string>
     <string name="swap_waiting_text">Gerade macht niemand sonst ein Foto. Sobald jemand irgendwo auf der Welt eins macht, tauscht ihr. Du kannst die App ruhig schließen – der Tausch erscheint unter Chats.</string>
     <string name="take_back">Zurückziehen</string>
+    <string name="take_another">Weiteres Foto machen</string>
+    <string name="swap_waiting_more">Du kannst schon dein nächstes Foto machen – dieses bleibt in der Warteschlange.</string>
     <string name="swap_failed">Das hat nicht geklappt</string>
     <string name="new_photo">Neues Foto</string>
     <string name="its_a_match">Getauscht!</string>
