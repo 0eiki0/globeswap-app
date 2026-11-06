@@ -195,6 +195,7 @@ private fun CameraView(
     val previewView = remember {
         PreviewView(context).apply { scaleType = PreviewView.ScaleType.FILL_CENTER }
     }
+    val shutter = rememberShutterSound()
     val imageCapture = remember {
         ImageCapture.Builder()
             .setCaptureMode(ImageCapture.CAPTURE_MODE_MINIMIZE_LATENCY)
@@ -264,6 +265,9 @@ private fun CameraView(
         imageCapture.takePicture(
             ContextCompat.getMainExecutor(context),
             object : ImageCapture.OnImageCapturedCallback() {
+                // Ton genau dann, wenn die Kamera das Bild aufnimmt (nicht erst nach dem Speichern)
+                override fun onCaptureStarted() = shutter.play()
+
                 override fun onCaptureSuccess(image: ImageProxy) {
                     scope.launch {
                         val jpeg = withContext(Dispatchers.Default) {

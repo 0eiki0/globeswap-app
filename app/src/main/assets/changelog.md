@@ -5,6 +5,7 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Shutter sound when you take a photo (silent when your phone is on silent or vibrate)
 
 ## 3.5.2 (2026-10-29)
 - 8 new filter looks: Golden, Film, Cinema, Matte, Dreamy, Retro, Duotone and Night – with glow, film grain and vignette
