@@ -98,6 +98,10 @@ class StoreScreenshots {
             swipe(Offset(width * 0.12f, height * 0.78f), Offset(width * 0.88f, height * 0.74f), durationMillis = 400)
         }
         compose.onNodeWithContentDescription("Draw").performClick()
+        // Neue Rahmen zeigen: Postkarte gewählt, Auswahl unten offen
+        compose.onNodeWithContentDescription("Frames").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Postcard").performClick()
         compose.onNodeWithContentDescription("Sticker: 😎").performClick()
         compose.onRoot().captureRoboImage("$OUT/3-sticker.png")
     }
