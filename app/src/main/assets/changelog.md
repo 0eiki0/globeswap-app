@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.5.3 (2026-11-07)
 - Shutter sound when you take a photo (silent when your phone is on silent or vibrate)
 
 ## 3.5.2 (2026-10-29)
