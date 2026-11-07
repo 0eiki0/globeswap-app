@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 3.5.4 (2026-11-07)
 - GlobeSwap now speaks Spanish, Portuguese (Brazil), French, Italian, Turkish, Indonesian and Polish – choose in Settings → Language
 - Month names when entering your birthday now appear in your language
 
