@@ -19,11 +19,16 @@ Android-App (Kotlin, Jetpack Compose, CameraX, OkHttp, WorkManager). Backend im 
   Der alte Signierschlüssel wird nicht mehr verwendet.
 - Der Server-Code bleibt privat; nichts daraus in dieses öffentliche Repo (GPL-3.0) kopieren.
 - Keine echten Nutzerfotos in Screenshots, Videos oder Tests – nur gezeichnete Beispiele.
-- **Zweisprachig (Englisch + Deutsch):** Keine Texte für Nutzer direkt im Code. Jeder neue oder geänderte Text kommt
-  in `res/values/strings.xml` (Englisch, Standard) **und** `res/values-de/strings.xml` (Deutsch, „du“) – gleicher Key.
+- **Mehrsprachig:** Keine Texte für Nutzer direkt im Code. Jeder neue oder geänderte Text kommt in `res/values/strings.xml`
+  (Englisch, Standard) **und** in alle Übersetzungen mit gleichem Key: `values-de` (Deutsch, „du“), `values-es`, `values-pt`
+  (brasilianisches Portugiesisch), `values-fr`, `values-it`, `values-tr`, `values-in` (Indonesisch), `values-pl` – jeweils
+  in der vertrauten Anrede. Fehlt ein Key, bricht Lint in CI ab. Bei Zahlen die Plural-Regeln der Sprache beachten
+  (Polnisch one/few/many/other, Französisch/Portugiesisch „one“ gilt auch für 0).
   In Compose `stringResource`/`pluralStringResource`, sonst `context.getString` bzw. `appString` (`util/Strings.kt`).
-  Begriffe: „Stranger“ heißt auch auf Deutsch immer „Stranger“ (der Stranger, des Strangers, mit Strangern); Senden-Knopf heißt in allen Sprachen „Swap!“, der Tab „Swap“ (Name der App). Lange deutsche Texte mit `GermanScreensTest` prüfen.
-  Changelog und Tagesthemen bleiben Englisch. Sprache wählbar in Einstellungen → Sprache (`util/AppLanguage.kt`):
+  Begriffe: „Stranger“ heißt in allen Sprachen „Stranger“ (der Stranger, des Strangers, mit Strangern); Senden-Knopf heißt in allen Sprachen „Swap!“, der Tab „Swap“ (Name der App).
+  Lange Texte mit `GermanScreensTest` bzw. `OtherLanguagesTest` prüfen (Screenshots unter `app/build/outputs/roborazzi/`).
+  Changelog und Tagesthemen bleiben Englisch. Sprache wählbar in Einstellungen → Sprache (`util/AppLanguage.kt`,
+  neue Sprache: Datei `values-xx` anlegen und eine Zeile in `AppLanguage.LANGUAGES`):
   Texte außerhalb von Compose immer über `AppLanguage.wrap(context)` bzw. `appString`, nicht direkt über den App-Kontext.
 
 ## Technik

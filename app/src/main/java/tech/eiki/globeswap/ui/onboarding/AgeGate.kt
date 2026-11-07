@@ -43,6 +43,7 @@ import java.time.YearMonth
 import java.time.format.TextStyle
 import java.util.Locale
 import tech.eiki.globeswap.R
+import tech.eiki.globeswap.util.AppLanguage
 
 const val MIN_AGE = 16
 
@@ -88,8 +89,8 @@ fun AgeGateScreen(onResult: (oldEnough: Boolean) -> Unit) {
                 )
                 Picker(
                     label = stringResource(R.string.month),
-                    value = month?.let { Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
-                    options = (1..12).map { it to Month.of(it).getDisplayName(TextStyle.FULL, Locale.ENGLISH) },
+                    value = month?.let { monthName(it) },
+                    options = (1..12).map { it to monthName(it) },
                     onPick = { month = it },
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -152,4 +153,10 @@ fun TooYoungScreen() {
             )
         }
     }
+}
+
+/** Monatsname in der Sprache der App (eigenständige Form, z. B. polnisch „styczeń“ statt „stycznia“), groß geschrieben. */
+private fun monthName(month: Int): String {
+    val locale = Locale.getDefault().takeIf { AppLanguage.isSupported(it) } ?: Locale.ENGLISH
+    return Month.of(month).getDisplayName(TextStyle.FULL_STANDALONE, locale).replaceFirstChar { it.titlecase(locale) }
 }

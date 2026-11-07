@@ -151,15 +151,12 @@ fun SettingsScreen(onBack: () -> Unit, onOpenWorld: () -> Unit, vm: SettingsView
     }
 }
 
-/** Sprache der App: wie am Handy, Englisch oder Deutsch. Die Sprachnamen stehen immer in ihrer eigenen Sprache. */
+/** Sprache der App: wie am Handy oder eine der Sprachen der App. Die Sprachnamen stehen immer in ihrer eigenen Sprache. */
 @Composable
 internal fun LanguageSection(current: String, onSelect: (String) -> Unit) {
     SectionTitle(stringResource(R.string.language))
-    listOf(
-        AppLanguage.SYSTEM to stringResource(R.string.language_system),
-        AppLanguage.ENGLISH to stringResource(R.string.language_en),
-        AppLanguage.GERMAN to stringResource(R.string.language_de),
-    ).forEach { (value, label) ->
+    (listOf(AppLanguage.SYSTEM to stringResource(R.string.language_system)) +
+        AppLanguage.LANGUAGES.map { it.code to it.name }).forEach { (value, label) ->
         Row(
             Modifier.fillMaxWidth()
                 .selectable(selected = current == value, onClick = { if (current != value) onSelect(value) })

@@ -301,8 +301,6 @@
     </plurals>
     <string name="language">Language</string>
     <string name="language_system">Phone language</string>
-    <string name="language_en" translatable="false">English</string>
-    <string name="language_de" translatable="false">Deutsch</string>
     <string name="theme">Appearance</string>
     <string name="theme_system">Like my phone</string>
     <string name="theme_light">Light</string>

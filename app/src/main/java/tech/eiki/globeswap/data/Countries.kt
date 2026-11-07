@@ -2,9 +2,10 @@ package tech.eiki.globeswap.data
 
 import androidx.annotation.StringRes
 import tech.eiki.globeswap.R
+import tech.eiki.globeswap.util.AppLanguage
 import java.util.Locale
 
-/** Anzeige von Ländern: Flagge und Name aus dem ISO-Code (z. B. "JP" → 🇯🇵 Japan), auf Deutsch oder Englisch wie die App. */
+/** Anzeige von Ländern: Flagge und Name aus dem ISO-Code (z. B. "JP" → 🇯🇵 Japan), in der Sprache der App. */
 object Countries {
     fun flag(code: String): String {
         if (code.length != 2 || !code.all { it in 'A'..'Z' }) return ""
@@ -14,8 +15,8 @@ object Countries {
     fun name(code: String): String =
         if (code.isBlank()) "" else Locale("", code).getDisplayCountry(appLocale()).ifBlank { code }
 
-    /** Die App gibt es auf Deutsch und Englisch – Ländernamen passend dazu, nie in einer dritten Sprache. */
-    private fun appLocale(): Locale = if (Locale.getDefault().language == "de") Locale.GERMAN else Locale.ENGLISH
+    /** Ländernamen in der Sprache der App – bei einer Handysprache, die die App nicht hat, auf Englisch wie die Texte. */
+    private fun appLocale(): Locale = Locale.getDefault().takeIf { AppLanguage.isSupported(it) } ?: Locale.ENGLISH
 
     /** "🇯🇵 Japan" oder "" ohne Land. */
     fun label(code: String): String = if (code.isBlank()) "" else "${flag(code)} ${name(code)}".trim()

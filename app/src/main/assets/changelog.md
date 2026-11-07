@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- GlobeSwap now speaks Spanish, Portuguese (Brazil), French, Italian, Turkish, Indonesian and Polish – choose in Settings → Language
+- Month names when entering your birthday now appear in your language
 
 ## 3.5.3 (2026-11-07)
 - Shutter sound when you take a photo (silent when your phone is on silent or vibrate)
