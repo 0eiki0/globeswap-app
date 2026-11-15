@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+
+## 4.0.1 (2026-11-15)
 - Times in the chat list ("5 minutes ago") now update by themselves
 - The language in Settings is now chosen from a drop-down menu
 
