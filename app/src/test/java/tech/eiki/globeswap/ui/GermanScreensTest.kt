@@ -122,7 +122,7 @@ class GermanScreensTest {
 
     @Test
     fun languageCanBeChosen() {
-        compose.setContent { GlobeSwapTheme { Surface { Column { LanguageSection(AppLanguage.GERMAN, onSelect = {}) } } } }
+        compose.setContent { GlobeSwapTheme { Surface { Column { LanguageSection(AppLanguage.GERMAN, initiallyExpanded = true, onSelect = {}) } } } }
         compose.onNodeWithText("Sprache des Handys").assertExists()
         compose.onNodeWithText("English").assertExists()
         try {

@@ -109,7 +109,7 @@ class OtherLanguagesTest {
     /** Jede Sprache lässt sich in den Einstellungen wählen und liefert eigene Texte; „Swap!“ bleibt überall gleich. */
     @Test
     fun everyLanguageCanBeChosen() {
-        compose.setContent { GlobeSwapTheme { Surface { Column { LanguageSection(AppLanguage.SYSTEM, onSelect = {}) } } } }
+        compose.setContent { GlobeSwapTheme { Surface { Column { LanguageSection(AppLanguage.SYSTEM, initiallyExpanded = true, onSelect = {}) } } } }
         try {
             AppLanguage.set(context, AppLanguage.ENGLISH)
             val english = AppLanguage.wrap(context).getString(R.string.swap_with)

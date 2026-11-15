@@ -5,6 +5,8 @@
 # Format: "## Version (JJJJ-MM-TT)", darunter Punkte mit "- ". Zeilen mit "#" am Anfang sind Kommentare.
 
 ## Next
+- Times in the chat list ("5 minutes ago") now update by themselves
+- The language in Settings is now chosen from a drop-down menu
 
 ## 3.5.4 (2026-11-07)
 - GlobeSwap now speaks Spanish, Portuguese (Brazil), French, Italian, Turkish, Indonesian and Polish – choose in Settings → Language

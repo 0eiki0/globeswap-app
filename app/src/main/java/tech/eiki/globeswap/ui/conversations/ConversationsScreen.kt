@@ -31,7 +31,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -44,6 +46,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
 import coil.compose.AsyncImage
 import tech.eiki.globeswap.R
 import tech.eiki.globeswap.data.Conversation
@@ -72,6 +78,7 @@ fun ConversationsScreen(
     var menuOpen by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
     var filter by rememberSaveable { mutableStateOf(Filter.ALL) }
+    val now = rememberNow()
     if (confirmDelete) {
         AlertDialog(
             onDismissRequest = { confirmDelete = false },
@@ -141,10 +148,29 @@ fun ConversationsScreen(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 16.dp + LocalBottomBarSpace.current),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            items(shown, key = { it.id }) { conversation -> ChatCard(conversation, photoUrl) { onOpen(conversation.id) } }
+            items(shown, key = { it.id }) { conversation -> ChatCard(conversation, photoUrl, now) { onOpen(conversation.id) } }
         }
     }
     }
+}
+
+/**
+ * Aktuelle Uhrzeit, die sich jede Minute (pünktlich zum Minutenwechsel) und beim Zurückkehren in die App erneuert –
+ * damit „vor 5 Minuten“ in der Übersicht mitläuft, ohne dass man den Tab wechseln muss.
+ */
+@Composable
+private fun rememberNow(): Long {
+    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    val lifecycle = LocalLifecycleOwner.current.lifecycle
+    LaunchedEffect(lifecycle) {
+        lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (true) {
+                now = System.currentTimeMillis()
+                delay(DateUtils.MINUTE_IN_MILLIS - now % DateUtils.MINUTE_IN_MILLIS + 50)
+            }
+        }
+    }
+    return now
 }
 
 /** Filter-Chip: aktiv dunkel gefüllt, sonst als helle Karte. */
@@ -163,7 +189,7 @@ private fun FilterPill(label: String, selected: Boolean, onClick: () -> Unit) {
 
 /** Ein Chat als Karte: großes Foto, Name mit Flagge, Status; neue Fotos mit gelbem Punkt. */
 @Composable
-private fun ChatCard(conversation: Conversation, photoUrl: (String) -> String, onClick: () -> Unit) {
+private fun ChatCard(conversation: Conversation, photoUrl: (String) -> String, now: Long, onClick: () -> Unit) {
     val unread = conversation.unread
     AppCard(onClick = onClick) {
         Row(Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -194,7 +220,7 @@ private fun ChatCard(conversation: Conversation, photoUrl: (String) -> String, o
             }
             Column(Modifier.padding(start = 8.dp, end = 4.dp), horizontalAlignment = Alignment.End) {
                 Text(
-                    DateUtils.getRelativeTimeSpanString(conversation.lastMessageAt).toString(),
+                    DateUtils.getRelativeTimeSpanString(conversation.lastMessageAt, now, DateUtils.MINUTE_IN_MILLIS).toString(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
